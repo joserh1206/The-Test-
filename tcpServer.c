@@ -6,20 +6,16 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sqlite3.h>
 
 #define PORT 4444
 
+sqlite3* openDatabase();
+
 int main(){
 
-	//FILE* filePointer = fopen("sessions_db.txt", "w");
-/*
-	if(filePointer == NULL){
-		printf("ERROR: Can't open history file\n");
-		return 1;
-	}
-*/
 	int sockfd, ret;
-	struct sockaddr_in serverAddr;
+	 struct sockaddr_in serverAddr;
 
 	int newSocket;
 	struct sockaddr_in newAddr;
@@ -27,6 +23,8 @@ int main(){
 	socklen_t addr_size;
 
 	char buffer[1024];
+	char done[6] = "DONE";
+
 	pid_t childpid;
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -66,23 +64,58 @@ int main(){
 			close(sockfd);
 
 			while(1){
+				const char separator[2] = "$";
+				char *word, *type;
 				recv(newSocket, buffer, 1024, 0);
-				if(strcmp(buffer, "exit") == 0){
+				word = strtok(buffer, separator);
+				type = strtok(NULL, separator);
+				if(strcmp(type, "e") == 0){
 					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 					break;
-				}else{
-					//fprintf(filePointer, buffer);
-					printf("Client: %s\n", buffer);
-					send(newSocket, buffer, strlen(buffer), 0);
-					bzero(buffer, sizeof(buffer));
+				}
+				if(strcmp(type, "u") == 0){
+					printf("Se envió el nombre de usuario\n");
+					printf("Y es %s\n", word);
+					send(newSocket, done, strlen(done), 0);
+					bzero(&done, sizeof(done));
+					bzero(&buffer, sizeof(buffer));
+				}
+				if(strcmp(type, "p") == 0){
+					printf("Se recibió la contrasenia\n");
+					printf("Y es %s\n", word);
+					send(newSocket, done, strlen(done), 0);
+					bzero(&done, sizeof(done));
+					bzero(&buffer, sizeof(buffer));
+				}
+				
+				
+				else{
+					//sqlite3 *db = openDatabase();
+					//printf("Client: %s\n", buffer);
+					//send(newSocket, buffer, strlen(buffer), 0);
+					bzero(&buffer, sizeof(buffer));
 				}
 			}
 		}
 
 	}
+
 	close(newSocket);
-	//fclose(filePointer);
 
 
 	return 0;
 }
+/*
+sqlite3* openDatabase()
+{
+  sqlite3 *db;
+  sqlite3_open("DatabaseTheTest.db", &db);
+
+  if( (sqlite3_open("DatabaseTheTest.db", &db)) ) 
+  {
+    fprintf(stderr, "[Database]Can't open database: %s\n", sqlite3_errmsg(db));
+    exit(0);
+  } 
+
+  return db;
+}*/

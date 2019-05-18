@@ -10,8 +10,6 @@
 #define PORT 4444
 
 int main(){
-	int i; //For loop
-	int q_counter = 1; //Questions counter variable
 
 	int clientSocket, ret;
 	struct sockaddr_in serverAddr;
@@ -36,42 +34,31 @@ int main(){
 	}
 	printf("[+]Connected to Server.\n");
 
-	FILE* filePointer = fopen("questions_db.txt", "r");
-	char output[256];
-
-	if(filePointer == NULL){
-		printf("ERROR: Can't open questions file\n");
-		return 1;
-	}
-
 	while(1){
-		if(fgets(output, sizeof(output), filePointer) != NULL){
-			printf("%02d: %s", q_counter, output);
-			scanf("%s", &buffer[0]);
-			send(clientSocket, buffer, strlen(buffer), 0);
-			q_counter++;	
-			if(strcmp(buffer, "exit") == 0){
-				close(clientSocket);
-				printf("[-]Disconnected from server.\n");
-				exit(1);
-			}
-			
-			if(recv(clientSocket, buffer, 1024, 0) < 0){
-				printf("[-]Error in receiving data.\n");
-			}
-		}
-		else{
-			strcpy(buffer, "exit");
-			send(clientSocket, buffer, strlen(buffer), 0);
-			printf("Ya no quedan más preguntas :O\n");
+		printf("Ingrese su nombre de usuario:\n");
+		scanf("%s", &buffer[0]);
+		strcat(buffer, "$u");
+		send(clientSocket, buffer, strlen(buffer), 0);
+		
+		bzero (&buffer, sizeof (buffer));
+
+		printf("Ingrese su contrasenia:\n");
+		scanf("%s", &buffer[0]);
+		strcat(buffer, "$p");
+		send(clientSocket, buffer, strlen(buffer), 0);
+
+		if(strcmp(buffer, ":exit") == 0){
 			close(clientSocket);
 			printf("[-]Disconnected from server.\n");
 			exit(1);
-			fclose(filePointer);
+		}
+
+		if(recv(clientSocket, buffer, 1024, 0) < 0){
+			printf("[-]Error in receiving data.\n");
+		}else{
+			printf("Server: %s\n", buffer);
 		}
 	}
-	
-	fclose(filePointer);
 
 	return 0;
 }
