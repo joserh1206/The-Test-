@@ -12,6 +12,8 @@
 
 sqlite3* openDatabase();
 int checkUsernamePassword(char *username, char *password);
+int insertPlayerIntoDB(char *username, char *password);
+static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 
 int main(){
@@ -35,6 +37,9 @@ int main(){
 		exit(1);
 	}
 	printf("[+]Server Socket is created.\n");
+
+	int on=1;
+  	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
 
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -102,6 +107,7 @@ int main(){
 				*/
 
 				check = checkUsernamePassword(username, password);
+				//bzero (&buffer, sizeof (buffer));
 
 				if(check){
 					printf("El usuario si existe\n");
@@ -111,6 +117,16 @@ int main(){
 					printf("El usuario no existe\n");
 					sprintf(response, "-1");
 					send(newSocket, response, strlen(response), 0);
+					bzero (&response, sizeof (response));
+					recv(newSocket, response, 1024, 0);
+					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
+						printf("Usuario a ingresar: %s\n", username);
+						printf("Contrasenia a ingresar: %s\n", password);
+						check = insertPlayerIntoDB(username, password);
+					}
+					else{
+						printf("No quieron ingresarlo a la base\n");
+					}
 				}
 				bzero(&buffer, sizeof(buffer));
 			}
@@ -147,19 +163,57 @@ int checkUsernamePassword(char *username, char *password)
   if (rc == SQLITE_ROW) 
   {
     printf("Existe\n");
-	printf("%s\n", sqlite3_column_text(res, 0));
+	//printf("%s\n", sqlite3_column_text(res, 0));
     return 1;
   }
   else
   {
     //sqlite3_finalize(res);
 	printf("No existe\n");
-	printf("%s\n", sqlite3_column_text(res, 0));
+	//printf("%s\n", sqlite3_column_text(res, 0));
     return 0;
   }
   sqlite3_finalize(res);
   closeDatabase(db);
   return 0;
+}
+
+int insertPlayerIntoDB(char *username, char *password)
+{
+  sqlite3 *db = openDatabase();
+  sqlite3_stmt *res;
+  char sql[1024];
+  int rc;
+  sprintf(sql, "INSERT INTO Users (username, password) VALUES ('%s', '%s');", username, password);
+  printf("1\n");
+  printf("2\n");
+  printf("%s\n", sql);
+  printf("3\n");
+  rc = sqlite3_exec(db, sql, callback, 0, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return -1;
+  }
+  else
+  {
+    //sqlite3_finalize(res);
+	printf("Usuario registrado correctamente\n");
+	//printf("%s\n", sqlite3_column_text(res, 0));
+  }
+  closeDatabase(db);
+  return 0;
+}
+
+static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+    int i;
+    for(i=0; i < argc; i++){
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;
 }
 
 void closeDatabase(sqlite3* db) { sqlite3_close(db); }

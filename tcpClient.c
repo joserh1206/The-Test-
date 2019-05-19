@@ -40,21 +40,34 @@ int main(){
 		bzero (&buffer2, sizeof (buffer2));
 		printf("Ingrese su nombre de usuario:\n");
 		scanf("%s", &buffer[0]);
-		getchar();
+		
 		strcat(buffer, "$");
 
 		printf("Ingrese su contrasenia:\n");
 		scanf("%s", &buffer2[0]);
-		getchar();
+		
 		strcat(buffer, buffer2);
 		printf("BUFFER: %s\n", buffer);
 		send(clientSocket, buffer, strlen(buffer), 0);
 
+		bzero (&buffer, sizeof (buffer));
+
+		recv(clientSocket, buffer, 1024, 0);
+		if(strcmp(buffer, "-1") == 0){
+			printf("El usuario ingresado no se encuentra en la BD, desea agregarlo? (S/N):\n");
+			scanf("%s", &buffer[0]);
+			send(clientSocket, buffer, strlen(buffer), 0);
+			bzero (&buffer, sizeof (buffer));
+		}
+		else{
+			printf("Buffer respuesta: %s\n", buffer);
+		}
+/*
 		if(recv(clientSocket, buffer, 1024, 0) < 0){
 			printf("[-]Error in receiving data.\n");
 		}else{
 			printf("Server: %s\n", buffer);
-		}
+		}*/
 	}
 
 	return 0;
