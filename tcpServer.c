@@ -11,6 +11,8 @@
 #define PORT 4444
 
 sqlite3* openDatabase();
+int checkUsernamePassword(char *username, char *password);
+void closeDatabase(sqlite3* db);
 
 int main(){
 
@@ -56,6 +58,7 @@ int main(){
 	while(1){
 		newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
 		if(newSocket < 0){
+			printf("Newsocket: %d\n", newSocket);
 			exit(1);
 		}
 		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
@@ -65,36 +68,50 @@ int main(){
 
 			while(1){
 				const char separator[2] = "$";
-				char *word, *type;
+				char *word, *type, *username, *password;
+				char response[4];
+				int check = 0;
+				bzero (&username, sizeof (username));
+				bzero (&password, sizeof (password));
+				
 				recv(newSocket, buffer, 1024, 0);
-				word = strtok(buffer, separator);
-				type = strtok(NULL, separator);
+				username = strtok(buffer, separator);
+				password = strtok(NULL, separator);
+				/*
 				if(strcmp(type, "e") == 0){
 					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 					break;
 				}
 				if(strcmp(type, "u") == 0){
+					username = word;
 					printf("Se envió el nombre de usuario\n");
-					printf("Y es %s\n", word);
+					printf("Y es %s\n", username);
 					send(newSocket, done, strlen(done), 0);
 					bzero(&done, sizeof(done));
 					bzero(&buffer, sizeof(buffer));
 				}
 				if(strcmp(type, "p") == 0){
+					password = word;
 					printf("Se recibió la contrasenia\n");
-					printf("Y es %s\n", word);
+					printf("Y es %s\n", password);
 					send(newSocket, done, strlen(done), 0);
 					bzero(&done, sizeof(done));
 					bzero(&buffer, sizeof(buffer));
 				}
-				
-				
-				else{
-					//sqlite3 *db = openDatabase();
-					//printf("Client: %s\n", buffer);
-					//send(newSocket, buffer, strlen(buffer), 0);
-					bzero(&buffer, sizeof(buffer));
+				*/
+
+				check = checkUsernamePassword(username, password);
+
+				if(check){
+					printf("El usuario si existe\n");
 				}
+				else
+				{
+					printf("El usuario no existe\n");
+					sprintf(response, "-1");
+					send(newSocket, response, strlen(response), 0);
+				}
+				bzero(&buffer, sizeof(buffer));
 			}
 		}
 
@@ -105,17 +122,57 @@ int main(){
 
 	return 0;
 }
-/*
+
+int checkUsernamePassword(char *username, char *password)
+{
+  sqlite3 *db = openDatabase();
+  sqlite3_stmt *res;
+  char sql[1024];
+  int rc;
+  sprintf(sql, "SELECT username, password FROM Users WHERE username = '%s' AND password = '%s';", username, password);
+  printf("1\n");
+  printf("2\n");
+  printf("%s\n", sql);
+  printf("3\n");
+  rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return -1;
+  }
+  rc = sqlite3_step(res);
+  if (rc == SQLITE_ROW) 
+  {
+    printf("Existe\n");
+	printf("%s\n", sqlite3_column_text(res, 0));
+    return 1;
+  }
+  else
+  {
+    //sqlite3_finalize(res);
+	printf("No existe\n");
+	printf("%s\n", sqlite3_column_text(res, 0));
+    return 0;
+  }
+  sqlite3_finalize(res);
+  closeDatabase(db);
+  return 0;
+}
+
+void closeDatabase(sqlite3* db) { sqlite3_close(db); }
+
 sqlite3* openDatabase()
 {
-  sqlite3 *db;
-  sqlite3_open("DatabaseTheTest.db", &db);
-
-  if( (sqlite3_open("DatabaseTheTest.db", &db)) ) 
-  {
-    fprintf(stderr, "[Database]Can't open database: %s\n", sqlite3_errmsg(db));
-    exit(0);
-  } 
-
-  return db;
-}*/
+	int rc;
+  	sqlite3 *db;
+  	rc = sqlite3_open("DatabaseTheTest.db", &db);
+	if(rc){
+		fprintf(stderr, "Cant open database %s\n", sqlite3_errmsg(db));
+	}
+	else{
+		fprintf(stderr, "BD Open!");
+	}
+  	return db;
+}
