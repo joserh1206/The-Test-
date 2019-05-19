@@ -73,7 +73,8 @@ int main(){
 				int check = 0;
 				bzero (&username, sizeof (username));
 				bzero (&password, sizeof (password));
-				
+				bzero (&buffer, sizeof (buffer));
+
 				recv(newSocket, buffer, 1024, 0);
 				username = strtok(buffer, separator);
 				password = strtok(NULL, separator);
