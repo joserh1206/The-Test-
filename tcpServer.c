@@ -208,6 +208,7 @@ int insertPlayerIntoDB(char *username, char *password)
 }
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+	printf("Esto es callback\n");
     int i;
     for(i=0; i < argc; i++){
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
