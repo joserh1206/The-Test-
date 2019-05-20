@@ -14,7 +14,7 @@ sqlite3* openDatabase();
 int checkUsernamePassword(char *username, char *password);
 int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
-void getPlayersToGame(char *username);
+char* getPlayersToGame(char *username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 
@@ -75,14 +75,14 @@ int main(){
 			char *user_id;
 			while(1){
 				const char separator[2] = "$";
-				char *word, *type, *username, *password;
-				char response[4];
+				char *word, *type, *username, *password, *buffer2;
+				char response[4], socket_com[1024];
 				int check = 0;
 				bzero (&username, sizeof (username));
 				bzero (&password, sizeof (password));
 				bzero (&buffer, sizeof (buffer));
 
-				recv(newSocket, buffer, 1024, 0);
+				recv(newSocket, buffer, 1024, 0); //Recibe usuario+contrasenia
 				username = strtok(buffer, separator);
 				password = strtok(NULL, separator);
 				/*
@@ -114,22 +114,36 @@ int main(){
 				if(check){
 					printf("El usuario si existe\n");
 					user_id = username;
-					beginGame(user_id);
+					//beginGame(user_id);
+					buffer2 = getPlayersToGame(username);
+					printf("BUFFER -> %s\n", buffer2);
+					sprintf(socket_com, "%s", buffer2);
+					send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+					bzero (&response, sizeof (response));
+					recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+					printf("El usuario quiere jugar con el jugador n.%s\n", response);
 				}
 				else
 				{
 					printf("El usuario no existe\n");
 					sprintf(response, "-1");
-					send(newSocket, response, strlen(response), 0);
+					send(newSocket, response, strlen(response), 0); //Pregunta si ingresarlo a la BD
 					bzero (&response, sizeof (response));
-					recv(newSocket, response, 1024, 0);
+					recv(newSocket, response, 1024, 0); //Recibe respuesta usuario respecto a BD
 					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
 						printf("Usuario a ingresar: %s\n", username);
 						printf("Contrasenia a ingresar: %s\n", password);
 						check = insertPlayerIntoDB(username, password);
 						if (check){
 							user_id = username;
-							beginGame(user_id);
+							//beginGame(user_id);
+							buffer2 = getPlayersToGame(username);
+							//sprintf(socket_com, "%s", buffer);
+							printf("BUFFER -> %s\n", buffer2);
+							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+							bzero (&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+							printf("El usuario quiere jugar con el jugador n.%s\n", response);
 						}
 					}
 					else{
@@ -148,14 +162,15 @@ int main(){
 }
 
 void beginGame(char *username){
-	getPlayersToGame(username);
+	//getPlayersToGame(username);
 }
 
-void getPlayersToGame(char *username)
+char* getPlayersToGame(char *username)
 {
   sqlite3 *db = openDatabase();
   sqlite3_stmt *stmt;
-  char sql[1024];
+  char sql[1024], out[2048];
+	char *buffer;
   int rc;
 	sprintf(sql,"select * from Users where Users.id_user not in (select distinct Users.id_user from Users inner join Game on Users.id_user = Game.id_user where Game.id_game in (select Game.id_game from Game inner join Users on Game.id_user = Users.id_user and Users.username = '%s'))", username);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -167,11 +182,19 @@ void getPlayersToGame(char *username)
   }
   else
   {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			printf("%s and %s\n", sqlite3_column_text(stmt,0), sqlite3_column_text(stmt,1));
+			//printf("%s and %s\n", sqlite3_column_text(stmt,0), sqlite3_column_text(stmt,1));
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - ");
+			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, "$");
 		}
+		buffer = out;
   }
   closeDatabase(db);
+	return(buffer);
 }
 
 int checkUsernamePassword(char *username, char *password)
