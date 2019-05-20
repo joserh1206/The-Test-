@@ -13,6 +13,8 @@
 sqlite3* openDatabase();
 int checkUsernamePassword(char *username, char *password);
 int insertPlayerIntoDB(char *username, char *password);
+void beginGame(char *username);
+void getPlayersToGame(char *username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 
@@ -70,7 +72,7 @@ int main(){
 
 		if((childpid = fork()) == 0){
 			close(sockfd);
-
+			char *user_id;
 			while(1){
 				const char separator[2] = "$";
 				char *word, *type, *username, *password;
@@ -111,6 +113,8 @@ int main(){
 
 				if(check){
 					printf("El usuario si existe\n");
+					user_id = username;
+					beginGame(user_id);
 				}
 				else
 				{
@@ -123,21 +127,28 @@ int main(){
 						printf("Usuario a ingresar: %s\n", username);
 						printf("Contrasenia a ingresar: %s\n", password);
 						check = insertPlayerIntoDB(username, password);
+						if (check){
+							user_id = username;
+							beginGame(user_id);
+						}
 					}
 					else{
-						printf("No quieron ingresarlo a la base\n");
+						printf("No quiero ingresarlo a la base\n");
 					}
 				}
 				bzero(&buffer, sizeof(buffer));
 			}
 		}
-
 	}
 
 	close(newSocket);
 
 
 	return 0;
+}
+
+void beginGame(char *username){
+	getPlayersToGame(username);
 }
 
 int checkUsernamePassword(char *username, char *password)
@@ -185,10 +196,6 @@ int insertPlayerIntoDB(char *username, char *password)
   char sql[1024];
   int rc;
   sprintf(sql, "INSERT INTO Users (username, password) VALUES ('%s', '%s');", username, password);
-  printf("1\n");
-  printf("2\n");
-  printf("%s\n", sql);
-  printf("3\n");
   rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -207,10 +214,38 @@ int insertPlayerIntoDB(char *username, char *password)
   return 0;
 }
 
+<<<<<<< HEAD
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
 	printf("Esto es callback\n");
+=======
+void getPlayersToGame(char *username)
+{
+  sqlite3 *db = openDatabase();
+  sqlite3_stmt *stmt;
+  char sql[1024];
+  int rc;
+	sprintf(sql,"select * from Users where Users.id_user not in (select distinct Users.id_user from Users inner join Game on Users.id_user = Game.id_user where Game.id_game in (select Game.id_game from Game inner join Users on Game.id_user = Users.id_user and Users.username = '%s'))", username);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			printf("%s and %s\n", sqlite3_column_text(stmt,0), sqlite3_column_text(stmt,1));
+		}
+  }
+  closeDatabase(db);
+}
+
+static int callback(void *data, int argc, char **argv, char **azColName){
+>>>>>>> 504c1de29663ea4791021a4e0793457be6b42184
     int i;
-    for(i=0; i < argc; i++){
+		printf("%d\n", argc);
+    for(i=0; i < argc*2; i++){
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
     printf("\n");
@@ -228,7 +263,7 @@ sqlite3* openDatabase()
 		fprintf(stderr, "Cant open database %s\n", sqlite3_errmsg(db));
 	}
 	else{
-		fprintf(stderr, "BD Open!");
+		fprintf(stderr, "BD Open!\n");
 	}
   	return db;
 }
