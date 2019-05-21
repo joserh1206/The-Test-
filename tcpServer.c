@@ -17,6 +17,8 @@ void beginGame(char *username);
 char* getPlayersToGame(char *username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
+void makeGame(char *player2, char *username);
+int getNewIdGame();
 
 int main(){
 
@@ -122,6 +124,7 @@ int main(){
 					bzero (&response, sizeof (response));
 					recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 					printf("El usuario quiere jugar con el jugador n.%s\n", response);
+					makeGame(username,response);
 				}
 				else
 				{
@@ -135,15 +138,13 @@ int main(){
 						printf("Contrasenia a ingresar: %s\n", password);
 						check = insertPlayerIntoDB(username, password);
 						if (check){
-							user_id = username;
-							//beginGame(user_id);
 							buffer2 = getPlayersToGame(username);
-							//sprintf(socket_com, "%s", buffer);
 							printf("BUFFER -> %s\n", buffer2);
 							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 							printf("El usuario quiere jugar con el jugador n.%s\n", response);
+							makeGame(username,response);
 						}
 					}
 					else{
@@ -159,10 +160,6 @@ int main(){
 
 
 	return 0;
-}
-
-void beginGame(char *username){
-	//getPlayersToGame(username);
 }
 
 char* getPlayersToGame(char *username)
@@ -259,6 +256,103 @@ int insertPlayerIntoDB(char *username, char *password)
   closeDatabase(db);
   return 0;
 }
+
+int makeGame(char *player2, char *username)
+{
+	int id = getNewIdGame();
+	id = id /2 + 1;
+	sqlite3 *db = openDatabase();
+  sqlite3_stmt *res;
+  char sql[1024];
+  int rc;
+  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d,(select Users.id_user from Users where Users.username = '%s'),0), (%d),'%s',0);", id, username, id, player2);
+  rc = sqlite3_exec(db, sql, callback, 0, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+    //sqlite3_finalize(res);
+	printf("Partida registrada correctamente\n");
+	//printf("%s\n", sqlite3_column_text(res, 0));
+  }
+  closeDatabase(db);
+	return id;
+}
+
+/*
+select count(*) from Game;
+insert into Game (id_game,id_user,points) values ('2',(select Users.id_user from Users where Users.username = 'gera0807'),0), ('2','4',0)
+
+insert into QuestionsPerGame (id_game,id_question,good_option,active) values ('2',2,null,0)
+
+--Muestra la opción de la pregunta
+select QuestionsPerGame.good_option from QuestionsPerGame where QuestionsPerGame.id_question = %s
+
+--Actualizar opcion correcta
+update QuestionsPerGame set good_option = %d where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d
+
+--Insertar preguntas al juego
+insert into QuestionsPerGame (id_game,id_question,good_option,active) values (%d,%d,null,0)
+
+--Obtener preguntas
+select Questions.Id_question, Questions.question, Questions.option1, Questions.option2, Questions.option3 from Questions order by random() limit 1;
+
+--Consulta partidas activas por jugador
+select Game.id_game, Game.id_user, Game.turn from Game where Game.id_game in (select Game.id_game from Game where Game.id_user = (select Users.id_user from Users where Users.username = 'gera0807')) and not Game.id_user = (select Users.id_user from Users where Users.username = 'gera0807')
+*/
+
+/* int getNewIdGame(){
+	sqlite3 *db = openDatabase();
+  sqlite3_stmt *stmt;
+  char sql[1024];
+	char id[4];
+  int rc, newId;
+	sprintf(sql, "select count(*) from Game");
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get id new game: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+		printf("%s",sqlite3_column_text(stmt,0));
+		newId = atoi(sqlite3_column_text(stmt,0));
+		return newId;
+	}
+	return -1;
+}
+ */
+
+int getNewIdGame()
+{
+  sqlite3 *db = openDatabase();
+  sqlite3_stmt *stmt;
+  char sql[1024];
+  int rc;
+	int newId = 0;
+	sprintf(sql, "select count(*) from Game");
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			newId = sqlite3_column_int(stmt,0);
+		}
+  }
+  closeDatabase(db);
+	return(newId);
+}
+
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
 	printf("Esto es callback\n");
