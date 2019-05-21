@@ -17,7 +17,7 @@ void beginGame(char *username);
 char* getPlayersToGame(char *username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
-void makeGame(char *player2, char *username);
+int makeGame(char *player2, char *username);
 int getNewIdGame();
 
 int main(){
@@ -265,7 +265,7 @@ int makeGame(char *player2, char *username)
   sqlite3_stmt *res;
   char sql[1024];
   int rc;
-  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d,(select Users.id_user from Users where Users.username = '%s'),0), (%d),'%s',0);", id, username, id, player2);
+  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d,(select Users.id_user from Users where Users.username = %s), 0), (%d), %s, 0);", id, username, id, player2);
   rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -345,8 +345,11 @@ int getNewIdGame()
   }
   else
   {
+		printf("Entra al else\n");
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			printf("COLUMN: %d\n", sqlite3_column_int(stmt,0));
 			newId = sqlite3_column_int(stmt,0);
+			printf("NEWID: %d\n", newId);
 		}
   }
   closeDatabase(db);
