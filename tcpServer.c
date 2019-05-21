@@ -23,7 +23,7 @@ int getNewIdGame();
 int main(){
 
 	int sockfd, ret;
-	 struct sockaddr_in serverAddr;
+	struct sockaddr_in serverAddr;
 
 	int newSocket;
 	struct sockaddr_in newAddr;
@@ -35,6 +35,8 @@ int main(){
 
 	pid_t childpid;
 
+	addr_size = sizeof(struct sockaddr_in);
+
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockfd < 0){
 		printf("[-]Error in connection.\n");
@@ -43,7 +45,7 @@ int main(){
 	printf("[+]Server Socket is created.\n");
 
 	int on=1;
-  	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+  setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
 
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
