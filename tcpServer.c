@@ -126,7 +126,7 @@ int main(){
 					bzero (&response, sizeof (response));
 					recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 					printf("El usuario quiere jugar con el jugador n.%s\n", response);
-					makeGame(username,response);
+					makeGame(response, username);
 				}
 				else
 				{
@@ -146,7 +146,7 @@ int main(){
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 							printf("El usuario quiere jugar con el jugador n.%s\n", response);
-							makeGame(username,response);
+							makeGame(response, username);
 						}
 					}
 					else{
@@ -261,14 +261,19 @@ int insertPlayerIntoDB(char *username, char *password)
 
 int makeGame(char *player2, char *username)
 {
+	printf("Entra makeGame\n");
+	//char user = username;
 	int id = getNewIdGame();
 	id = id /2 + 1;
 	sqlite3 *db = openDatabase();
   sqlite3_stmt *res;
   char sql[1024];
   int rc;
-  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d,(select Users.id_user from Users where Users.username = %s), 0), (%d), %s, 0);", id, username, id, player2);
-  rc = sqlite3_exec(db, sql, callback, 0, 0);
+	printf("Username: %s\n", username);
+	printf("Player2: %s\n", player2);
+  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d,(select Users.id_user from Users where Users.username = '%s'), 0), (%d, %s, 0);", id, username, id, player2);
+  printf("sql query: %s\n", sql);
+	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
   {
