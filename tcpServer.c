@@ -15,6 +15,7 @@ int checkUsernamePassword(char *username, char *password);
 int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
 char* getPlayersToGame(char *username);
+char* getPlayersToGame2(char *username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 int makeGame(char *player2, char *username);
@@ -104,7 +105,12 @@ int main(){
 				check = checkUsernamePassword(username, password);
 
 				if(check){
-					buffer2 = getPlayersToGame(username);
+					if (getNewIdGame() == 0){
+						buffer2 = getPlayersToGame2(username);
+					}
+					else{
+						buffer2 = getPlayersToGame(username);
+					}
 					sprintf(socket_com, "%s", buffer2);
 					send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 					bzero (&response, sizeof (response));
@@ -227,6 +233,38 @@ char* getPlayersToGame(char *username)
 	return(buffer);
 }
 
+char* getPlayersToGame2(char *username)
+{
+  sqlite3 *db = openDatabase();
+  sqlite3_stmt *stmt;
+  char sql[1024], out[2048];
+	char *buffer;
+  int rc;
+	sprintf(sql,"select * from Users where not Users.username = '%s'", username);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - ");
+			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, "$");
+		}
+		buffer = out;
+  }
+	
+  closeDatabase(db);
+	return(buffer);
+}
+
 int checkUsernamePassword(char *username, char *password)
 {
   sqlite3 *db = openDatabase();
@@ -243,22 +281,26 @@ int checkUsernamePassword(char *username, char *password)
   if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
+    sqlite3_finalize(res);
+		sqlite3_close(db);
     return -1;
   }
   rc = sqlite3_step(res);
   if (rc == SQLITE_ROW) 
   {
     printf("Existe\n");
+		sqlite3_finalize(res);
 		closeDatabase(db);
     return 1;
   }
   else
   {
 		printf("No existe\n");
+		sqlite3_finalize(res);
 		closeDatabase(db);
     return 0;
   }
+	sqlite3_finalize(res);
   closeDatabase(db);
   return 0;
 }
@@ -289,9 +331,14 @@ int insertPlayerIntoDB(char *username, char *password)
 int makeGame(char *player2, char *username)
 {
 	int id = getNewIdGame();
+	if (id==0){
+		id = 1;
+	}
+	else{
+		id = id /2 + 1;
+	}
 	int id_player1 = getActualIdGame(username);
 	int id_player2 = atoi(player2);
-	id = id /2 + 1;
 	insertPlayer(id, id_player1, id_player2);
 	printf("Pasa el insertPlayer\n");
 	return id;
@@ -509,7 +556,7 @@ int getValueQuestion(int id_question){
 			value = sqlite3_column_int(stmt,0);
 		}
   }
-	
+	sqlite3_finalize(stmt);
   closeDatabase(db);
 	return(value);
 }
