@@ -105,6 +105,9 @@ int main(){
 					recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 					printf("El usuario quiere jugar con el jugador n.%s\n", response);
 					int id_game = makeGame(response, username);
+					while(1){
+								int id_question = getQuestionId();
+					}
 				}
 				else
 				{
@@ -125,6 +128,9 @@ int main(){
 							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
 							printf("El usuario quiere jugar con el jugador n.%s\n", response);
 							int id_game = makeGame(response, username);
+							while(1){
+								int id_question = getQuestionId();
+							}
 						}
 					}
 					else{
