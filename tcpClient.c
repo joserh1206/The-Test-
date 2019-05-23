@@ -15,6 +15,7 @@ int main(){
 	struct sockaddr_in serverAddr;
 	char buffer[1024];
 	char buffer2[1024];
+	char bufferquestions[1024];
 
 	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if(clientSocket < 0){
@@ -37,9 +38,10 @@ int main(){
 
 	while(1){
 		const char separator[2] = "$";
-		char *user_from_list;
+		char *user_from_list, *questions, *answers;
 		bzero (&buffer, sizeof (buffer));
 		bzero (&buffer2, sizeof (buffer2));
+		bzero (&bufferquestions, sizeof (bufferquestions));
 		printf("Ingrese su nombre de usuario:\n");
 		scanf("%s", &buffer[0]);
 		
@@ -70,6 +72,25 @@ int main(){
 			printf("Seleccione el numero del usuario con el que desea iniciar una nueva partida\n");
 			scanf("%s", &buffer[0]);
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia numero de usuario para partida al servidor
+			//printf("Buffer1: %s\n", buffer);
+			bzero (&buffer, sizeof (buffer));
+			recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+			//printf("Buffer2: %s\n", buffer);
+			questions = buffer;
+			sprintf(questions, "%s", buffer);
+			//bzero (&buffer, sizeof (buffer));
+			//printf("QUESTIONS: %s\n", questions);
+			while((questions = strtok(questions, separator)) != NULL){
+				printf("%s\n", questions);
+				questions = NULL;
+				//bzero (&buffer2, sizeof (buffer2));
+				printf("Seleccione una opción: ");
+				scanf("%s", &buffer2[0]);
+				strcat(bufferquestions, buffer2);
+				strcat(bufferquestions, "$");
+			}
+			//printf("BUFFER LUEGO: %s\n", bufferquestions);
+			send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 		}
 		else{
 			user_from_list = buffer;
@@ -81,6 +102,25 @@ int main(){
 			printf("Seleccione el numero del usuario con el que desea iniciar una nueva partida\n");
 			scanf("%s", &buffer[0]);
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia numero de usuario para partida al servidor
+			//printf("Buffer1: %s\n", buffer);
+			bzero (&buffer, sizeof (buffer));
+			recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+			//printf("Buffer2: %s\n", buffer);
+			questions = buffer;
+			sprintf(questions, "%s", buffer);
+			//bzero (&buffer, sizeof (buffer));
+			//printf("QUESTIONS: %s\n", questions);
+			while((questions = strtok(questions, separator)) != NULL){
+				printf("%s\n", questions);
+				questions = NULL;
+				//bzero (&buffer2, sizeof (buffer2));
+				printf("Seleccione una opción: ");
+				scanf("%s", &buffer2[0]);
+				strcat(bufferquestions, buffer2);
+				strcat(bufferquestions, "$");
+			}
+			//printf("BUFFER LUEGO: %s\n", bufferquestions);
+			send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 		}
 /*
 		if(recv(clientSocket, buffer, 1024, 0) < 0){
