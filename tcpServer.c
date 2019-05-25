@@ -31,6 +31,7 @@ void addPoints(int id_game, int id_player, int value);
 int getValueQuestion(int id_question);
 int getGoodOption(int id_game, int id_question);
 void updateCorrectAnswer(int optionSelected, int id_game, int id_question);
+sqlite3_stmt *stmt;
 
 int main(){
 
@@ -43,7 +44,7 @@ int main(){
 	socklen_t addr_size;
 
 	char buffer[1024];
-	char done[6] = "DONE";
+	//char done[6] = "DONE";
 
 	pid_t childpid;
 
@@ -140,7 +141,18 @@ int main(){
 								printf("Respuesta: %s\n", answers);
 								answers = NULL;
 							}
+							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
+							//1. Hay que guardar las respuestas en la base de datos
+							//2. Al entrar a este while hay que verificar que no existan partidas existentes
+								//->Si existen hay que traer las preguntas que respondió el otro jugador
+								//->Si no existe no hay que cambiar nada
+							//3. Guardar y mostrar los puntos de los dos jugadores
+							//Al inicio mostrar los jugadores disponibles para iniciar una partida nueva (Como ya hace)
+								//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir)
+							//5. Mostrar estadisticas 
+							//OPCIONAL 1 -> Agregar preguntas desde el servidor
+							//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
 						}
 					}
 				else
@@ -204,7 +216,6 @@ int main(){
 char* getPlayersToGame(char *username)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
@@ -236,7 +247,6 @@ char* getPlayersToGame(char *username)
 char* getPlayersToGame2(char *username)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
@@ -268,7 +278,6 @@ char* getPlayersToGame2(char *username)
 int checkUsernamePassword(char *username, char *password)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "SELECT username, password FROM Users WHERE username = '%s' AND password = '%s';", username, password);
@@ -276,31 +285,31 @@ int checkUsernamePassword(char *username, char *password)
   printf("2\n");
   printf("%s\n", sql);
   printf("3\n");
-  rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+  rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 
   if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
-    sqlite3_finalize(res);
+    sqlite3_finalize(stmt);
 		sqlite3_close(db);
     return -1;
   }
-  rc = sqlite3_step(res);
+  rc = sqlite3_step(stmt);
   if (rc == SQLITE_ROW) 
   {
     printf("Existe\n");
-		sqlite3_finalize(res);
+		sqlite3_finalize(stmt);
 		closeDatabase(db);
     return 1;
   }
   else
   {
 		printf("No existe\n");
-		sqlite3_finalize(res);
+		sqlite3_finalize(stmt);
 		closeDatabase(db);
     return 0;
   }
-	sqlite3_finalize(res);
+	sqlite3_finalize(stmt);
   closeDatabase(db);
   return 0;
 }
@@ -308,7 +317,6 @@ int checkUsernamePassword(char *username, char *password)
 int insertPlayerIntoDB(char *username, char *password)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "INSERT INTO Users (username, password) VALUES ('%s', '%s');", username, password);
@@ -346,7 +354,6 @@ int makeGame(char *player2, char *username)
 
 void insertPlayer(int id_game, int id_player1, int id_player2){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "insert into Game (id_game,id_user,points) values (%d, %d, 0), (%d, %d, 0);", id_game, id_player1, id_game, id_player2);
@@ -371,7 +378,6 @@ void insertPlayer(int id_game, int id_player1, int id_player2){
 int getActualIdGame(char *username)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024];
   int rc;
 	int newId = 0;
@@ -399,7 +405,6 @@ int getActualIdGame(char *username)
 int getQuestionId()
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024];
   int rc;
 	int newId = 0;
@@ -426,7 +431,6 @@ int getQuestionId()
 
 int insertQuestionToGame(int id_game, int id_question){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
 	printf("insertQuestionToGame: id_game -> %d, id_question -> %d\n", id_game, id_question);
@@ -450,7 +454,6 @@ int insertQuestionToGame(int id_game, int id_question){
 char* getQuestionData(int id_question)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
@@ -489,7 +492,6 @@ char* getQuestionData(int id_question)
 
 void updateCorrectAnswer(int optionSelected, int id_game, int id_question){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "update QuestionsPerGame set good_option = %d where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d", optionSelected, id_game, id_question);
@@ -511,7 +513,6 @@ void updateCorrectAnswer(int optionSelected, int id_game, int id_question){
 int getGoodOption(int id_game, int id_question)
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024];
   int rc;
 	int option = 0;
@@ -537,7 +538,6 @@ int getGoodOption(int id_game, int id_question)
 
 int getValueQuestion(int id_question){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024];
   int rc;
 	int value = 0;
@@ -563,7 +563,6 @@ int getValueQuestion(int id_question){
 
 void addPoints(int id_game, int id_player, int value){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "update Game set points = points + %d where Game.id_game = %d and Game.id_user = %d", value, id_game, id_player);
@@ -584,7 +583,6 @@ void addPoints(int id_game, int id_player, int value){
 
 void addSuccess(int id_question){
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "update Questions set correct = correct + 1 where Questions.Id_question = %d", id_question);
@@ -606,7 +604,6 @@ void addSuccess(int id_question){
 void addMiss(int id_question)
 {
 	sqlite3 *db = openDatabase();
-  sqlite3_stmt *res;
   char sql[1024];
   int rc;
   sprintf(sql, "update Questions set incorrect = incorrect + 1 where Questions.Id_question = %d", id_question);
@@ -628,7 +625,6 @@ void addMiss(int id_question)
 int getNewIdGame()
 {
   sqlite3 *db = openDatabase();
-  sqlite3_stmt *stmt;
   char sql[1024];
   int rc;
 	int newId = 0;

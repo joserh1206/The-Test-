@@ -121,6 +121,10 @@ int main(){
 			}
 			//printf("BUFFER LUEGO: %s\n", bufferquestions);
 			send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
+			bzero (&buffer, sizeof (buffer));
+			printf("Espere a que el otro jugador responda\n");
+			recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+			
 		}
 /*
 		if(recv(clientSocket, buffer, 1024, 0) < 0){
