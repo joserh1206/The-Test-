@@ -16,6 +16,7 @@ int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
 char* getPlayersToGame(char *username);
 char* getPlayersToGame2(char *username);
+char* getGamesInProcess(int id_player);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 int makeGame(char *player2, char *username);
@@ -30,7 +31,7 @@ void addSuccess(int id_question);
 void addPoints(int id_game, int id_player, int value);
 int getValueQuestion(int id_question);
 int getGoodOption(int id_game, int id_question);
-void updateCorrectAnswer(int optionSelected, int id_game, int id_question);
+void setCorrectAnswer(int optionSelected, int id_game, int id_question);
 sqlite3_stmt *stmt;
 
 int main(){
@@ -122,36 +123,32 @@ int main(){
 							bzero(&socket_com, sizeof(socket_com));
 							int id_question = getQuestionId();
 							insertQuestionToGame(id_game, id_question);
-							char* data = getQuestionData(id_question);
-							//printf("DATA: %s\n", data);
-							strcat(socket_com, data);
+							char* question1 = getQuestionData(id_question);
+							printf("Pregunta 1: %s",question1);
+							strcat(socket_com, question1);
 							strcat(socket_com, "$");
-							//printf("SOCKET_COM1: %s\n", socket_com);
-							bzero(&data, sizeof(data));
-							bzero(&id_question, sizeof(id_question));
-							id_question = getQuestionId();
-							data = getQuestionData(id_question);
-							strcat(socket_com, data);
+							int id_question2 = getQuestionId();
+							insertQuestionToGame(id_game, id_question2);
+							char* question2 = getQuestionData(id_question2);
+							printf("Pregunta 2: %s",question2);
+							strcat(socket_com, question2);
+							printf("Preguntas: %s",socket_com);
 							send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
-							//printf("SOCKET_COM2: %s\n", socket_com);
 							recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
-							//printf("Response: %s\n", response);
 							answers = response;
-							while((answers = strtok(answers, separator)) != NULL){
-								printf("Respuesta: %s\n", answers);
-								answers = NULL;
-							}
+							setCorrectAnswer(answers[0]-'0',id_game,id_question);
+							setCorrectAnswer(answers[2]-'0',id_game,id_question2);
+							printf("Respuesta: %c\n", answers[2]);
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
-							//1. Hay que guardar las respuestas en la base de datos
 							//2. Al entrar a este while hay que verificar que no existan partidas existentes
-								//->Si existen hay que traer las preguntas que respondió el otro jugador
+								//->Si existen hay que traer las preguntas que respondió el otro jugador 
 								//->Si no existe no hay que cambiar nada
-							//3. Guardar y mostrar los puntos de los dos jugadores
+							//3. Guardar y mostrar los puntos de los dos jugadores (esta)
 							//Al inicio mostrar los jugadores disponibles para iniciar una partida nueva (Como ya hace)
-								//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir)
-							//5. Mostrar estadisticas 
-							//OPCIONAL 1 -> Agregar preguntas desde el servidor
+								//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir) (esto ya esta)
+							//5. Mostrar estadisticas (esta)
+							//OPCIONAL 1 -> Agregar preguntas desde el servidor 
 							//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
 						}
 					}
@@ -176,19 +173,18 @@ int main(){
 								int id_question = getQuestionId();
 								insertQuestionToGame(id_game, id_question);
 								char* data = getQuestionData(id_question);
-								//printf("DATA: %s\n", data);
+								int id_question2 = getQuestionId();
+								insertQuestionToGame(id_game, id_question2);
+								char* data2 = getQuestionData(id_question2);
 								strcat(socket_com, data);
 								strcat(socket_com, "$");
-								//printf("SOCKET_COM1: %s\n", socket_com);
 								bzero(&data, sizeof(data));
 								bzero(&id_question, sizeof(id_question));
 								id_question = getQuestionId();
 								data = getQuestionData(id_question);
 								strcat(socket_com, data);
 								send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
-								//printf("SOCKET_COM2: %s\n", socket_com);
 								recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
-								//printf("Response: %s\n", response);
 								answers = response;
 								while((answers = strtok(answers, separator)) != NULL){
 									printf("Respuesta: %s\n", answers);
@@ -211,6 +207,43 @@ int main(){
 
 
 	return 0;
+}
+
+char* getGamesInProcess(int id_player){
+	sqlite3 *db = openDatabase();
+  char sql[1024], out[2048];
+	char *buffer;
+  int rc;
+	sprintf(sql, "select Game.id_game, Users.username from Users inner join Game on Users.id_user = Game.id_user where Game.id_game in (select distinct Game.id_game from Game where Game.id_user = %d) and not Users.id_user = %d;", id_player,id_player);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
+  }
+  else
+  {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
+		int counter = 0;
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - ");
+			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, "$");
+			counter++;
+		}
+		if(counter == 0){
+			buffer = "No se encuentran partidas activas para este jugador\n";
+		}
+		else{
+			buffer = out;
+		}
+  }
+	
+  closeDatabase(db);
+	return(buffer);
 }
 
 char* getPlayersToGame(char *username)
@@ -391,11 +424,8 @@ int getActualIdGame(char *username)
   }
   else
   {
-		printf("Entra al else\n");
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			printf("COLUMN: %d\n", sqlite3_column_int(stmt,0));
 			newId = sqlite3_column_int(stmt,0);
-			printf("NEWID: %d\n", newId);
 		}
   }
   closeDatabase(db);
@@ -418,11 +448,8 @@ int getQuestionId()
   }
   else
   {
-		printf("Entra al else\n");
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			printf("COLUMN: %d\n", sqlite3_column_int(stmt,0));
 			newId = sqlite3_column_int(stmt,0);
-			printf("NEWID: %d\n", newId);
 		}
   }
   closeDatabase(db);
@@ -433,9 +460,7 @@ int insertQuestionToGame(int id_game, int id_question){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-	printf("insertQuestionToGame: id_game -> %d, id_question -> %d\n", id_game, id_question);
-  sprintf(sql, "insert into QuestionsPerGame (id_game,id_question,good_option,active) values (%d,%d,null,0)",id_game,id_question);
-  printf("sql query: %s\n", sql);
+  sprintf(sql,"insert into QuestionsPerGame (id_game,id_question,good_option,active) values (%d,%d,null,0);",id_game,id_question);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -485,12 +510,11 @@ char* getQuestionData(int id_question)
 		}
 		buffer = out;
   }
-	printf("BUFFER GetQuestionsData: %s\n", buffer);
   closeDatabase(db);
 	return(buffer);
 }
 
-void updateCorrectAnswer(int optionSelected, int id_game, int id_question){
+void setCorrectAnswer(int optionSelected, int id_game, int id_question){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
@@ -651,13 +675,11 @@ int getNewIdGame()
 }
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
-	printf("Esto es callback\n");
     int i;
-		printf("%d\n", argc);
     for(i=0; i < argc*2; i++){
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
-    printf("\n");
+
     return 0;
 }
 
