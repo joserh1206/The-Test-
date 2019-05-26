@@ -115,9 +115,10 @@ int main(){
 				if(check){
 					sprintf(response, "1");
 					send(newSocket, response, strlen(response), 0); //Envia verificacion al cliente
+					
+					ciclo:
 					bzero (&response, sizeof (response));
 					recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-					printf("Response del usuario: %s\n", response);
 					if(strcmp(response, "1") == 0){
 						printf("El usuario eligió 1\n");
 						if (getNewIdGame() == 0){
@@ -156,7 +157,11 @@ int main(){
 							setCorrectAnswer(answers[2]-'0',id_game,id_question2);
 							changeTurnGame(id_game, id_player2);
 							bzero(&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
+							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
+//							printf("Ultimo recv %s\n", response);
+							if(strcmp(response, "#") == 0){
+								goto ciclo;
+							}	
 							//2. Al entrar a este while hay que verificar que no existan partidas existentes
 								//->Si existen hay que traer las preguntas que respondió el otro jugador 
 								//->Si no existe no hay que cambiar nada
@@ -187,13 +192,22 @@ int main(){
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", mensaje);
 								send(newSocket, socket_com, strlen(socket_com), 0);
+								goto ciclo;
 							}
+							bzero(&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); 
+							if(strcmp(response, "#") == 0){
+								goto ciclo;
+							}	
 						}
 						if(strcmp(response, "3") == 0){
 							//estadisticas();
 							printf("El usuario eligio 3\n");
-							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+							bzero(&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); 
+							if(strcmp(response, "#") == 0){
+								goto ciclo;
+							}	
 						}
 						if(strcmp(response, "4") == 0){
 							//estadisticas();
@@ -214,6 +228,7 @@ int main(){
 							bzero (&response, sizeof (response));
 							sprintf(response, "Ok");
 							send(newSocket, response, strlen(response), 0);
+							ciclo2:
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
 							if(strcmp(response, "1") == 0){
@@ -254,7 +269,10 @@ int main(){
 									setCorrectAnswer(answers[2]-'0',id_game,id_question2);
 									changeTurnGame(id_game, id_player2);
 									bzero(&response, sizeof (response));
-									recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
+									recv(newSocket, response, 1024, 0); 
+									if(strcmp(response, "#") == 0){
+										goto ciclo2;
+									}	
 									//2. Al entrar a este while hay que verificar que no existan partidas existentes
 										//->Si existen hay que traer las preguntas que respondió el otro jugador 
 										//->Si no existe no hay que cambiar nada
@@ -284,12 +302,19 @@ int main(){
 									bzero (&socket_com, sizeof (socket_com));
 									sprintf(socket_com, "%s", mensaje);
 									send(newSocket, socket_com, strlen(socket_com), 0);
+									goto ciclo2;
 								}
+								if(strcmp(response, "#") == 0){
+									goto ciclo2;
+								}	
 							}
 							if(strcmp(response, "3") == 0){
 								printf("El usuario eligio 3\n");
 								bzero (&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+								recv(newSocket, response, 1024, 0); 
+								if(strcmp(response, "#") == 0){
+									goto ciclo2;
+								}	
 							}
 							if(strcmp(response, "4") == 0){
 								printf("El usuario eligio 4\n");

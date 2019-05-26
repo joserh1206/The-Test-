@@ -135,6 +135,8 @@ int main(){
 					send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 					bzero (&buffer, sizeof (buffer));
 					printf("Espere a que el otro jugador responda\n");
+					sprintf(buffer, "#");
+					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 					continue;
 				}
 				if(strcmp(buffer, "2") == 0){
@@ -167,9 +169,11 @@ int main(){
 					}
 					else{
 						while((puntos = strtok(puntos, separator)) != NULL){
-						printf("%s\n", puntos);
-						puntos = NULL;
+							printf("%s\n", puntos);
+							puntos = NULL;
 						}
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
 				}
@@ -183,6 +187,8 @@ int main(){
 						user_from_list = NULL;
 					}
 					bzero (&buffer, sizeof (buffer));
+					sprintf(buffer, "#");
+					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 					continue;
 				}
 			}			
@@ -249,6 +255,8 @@ int main(){
 					send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 					bzero (&buffer, sizeof (buffer));
 					printf("Espere a que el otro jugador responda\n");
+					sprintf(buffer, "#");
+					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 					continue;
 				}
 				if(strcmp(buffer, "2") == 0){
@@ -284,6 +292,8 @@ int main(){
 							printf("%s\n", puntos);
 							puntos = NULL;
 						}
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
 				}
@@ -297,6 +307,8 @@ int main(){
 						user_from_list = NULL;
 					}
 					bzero (&buffer, sizeof (buffer));
+					sprintf(buffer, "#");
+					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 					continue;
 				}
 			}			
