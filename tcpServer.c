@@ -196,6 +196,7 @@ int main(){
 					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
 						check = insertPlayerIntoDB(username, password);
 						if (check){
+							printf("Entra al check: %d\n", check);
 							bzero (&response, sizeof (response));
 							sprintf(response, "Ok");
 							send(newSocket, response, strlen(response), 0);
@@ -272,6 +273,7 @@ int main(){
 						}
 					}
 					else{
+						printf("CHECK: %d\n", check);
 						printf("No quiero ingresarlo a la base\n");
 					}
 				}
@@ -510,7 +512,7 @@ int insertPlayerIntoDB(char *username, char *password)
 		printf("Usuario registrado correctamente\n");
   }
   closeDatabase(db);
-  return 0;
+  return 1;
 }
 
 int makeGame(char *player2, char *username)
