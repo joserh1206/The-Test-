@@ -14,6 +14,9 @@ sqlite3* openDatabase();
 int checkUsernamePassword(char *username, char *password);
 int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
+char* getAllGamesAndStatisticsForPlayer(int player);
+char* getRightAndWrongPlayer(int player);
+int getCorrectAnswer(int game, int question);
 char* getPlayersToGame(char *username);
 char* getPlayersToGame2(char *username);
 char* getGamesInProcess(char* username);
@@ -84,8 +87,6 @@ int main(){
 	}else{
 		printf("[-]Error in binding.\n");
 	}
-
-
 	while(1){
 		newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
 		if(newSocket < 0){
@@ -335,6 +336,94 @@ int main(){
 	return 0;
 }
 
+//Obtener respuesta correct, recibe el id del juego y id de la pregunta
+int getCorrectAnswer(int game, int question)
+{
+  sqlite3 *db = openDatabase();
+  char sql[1024];
+	int good_answer;
+  int rc;
+  sprintf(sql, "select QuestionsPerGame.good_option from QuestionsPerGame where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d;", game, question);
+  rc = sqlite3_exec(db, sql, callback, 0, 0);
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to select data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+    return -1;
+  }
+  else
+  {
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			good_answer = sqlite3_column_int(stmt,0);
+		}
+  }
+  closeDatabase(db);
+	return(good_answer);
+}
+
+//Obtiene la suma de los acierto y los fallos de un jugador
+char* getRightAndWrongPlayer(int player){
+	sqlite3 *db = openDatabase();
+  char sql[1024], out[2048];
+	char *buffer;
+  int rc;
+	sprintf(sql, "select sum(Statistics.good_answer), sum(Statistics.bad_answer) from Statistics where Statistics.id_user = %d;", player);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    closeDatabase(db);
+  }
+  else
+  {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			strcat(out, "Preguntas acertadas: ");
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - Preguntas fallidas: ");
+			strcat(out, sqlite3_column_text(stmt,1));
+		}
+  }
+	buffer = out;
+	closeDatabase(db);
+	return buffer;
+}
+
+//Obtiene todos los juegos de un usuario especifico y las respuestas buenas y malas
+char* getAllGamesAndStatisticsForPlayer(int player){
+	sqlite3 *db = openDatabase();
+  char sql[1024], out[2048];
+	char *buffer;
+  int rc;
+	sprintf(sql, "select Statistics.id_game, Statistics.good_answer, Statistics.bad_answer from Statistics where Statistics.id_user = %d;", player);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    closeDatabase(db);
+  }
+  else
+  {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			strcat(out, "Id del juego: ");
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - Preguntas acertadas: ");
+			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, " - Preguntas fallidas: ");
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, "$");
+		}
+  }
+	buffer = out;
+	closeDatabase(db);
+	return buffer;
+}
+
 int createStatistics(int player, int game)
 {
   sqlite3 *db = openDatabase();
@@ -369,7 +458,7 @@ int getTurnPlayer(int id_game){
     fprintf(stderr, "Failed get turn: %s\n", sqlite3_errmsg(db));
     closeDatabase(db);
   }
-  else
+	  else
   {
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
 			turn = sqlite3_column_int(stmt,0);
@@ -423,7 +512,6 @@ char* getPointsGame(int id_game){
 	char *buffer;
   int rc;
 	sprintf(sql, "select Users.username, Game.points from Game inner join Users on Users.id_user = Game.id_user where Game.id_game = %d;", id_game);
-	//printf("%s", sql);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
