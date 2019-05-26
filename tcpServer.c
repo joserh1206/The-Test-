@@ -37,6 +37,8 @@ void addPoints(int id_game, int id_player, int value);
 int getValueQuestion(int id_question);
 int getGoodOption(int id_game, int id_question);
 void setCorrectAnswer(int optionSelected, int id_game, int id_question);
+int getTurnPlayer(int id_game);
+
 sqlite3_stmt *stmt;
 
 int main(){
@@ -175,10 +177,17 @@ int main(){
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
 							int id_game = atoi(response);
-							char* points = getPointsGame(id_game);
-							bzero (&socket_com, sizeof (socket_com));
-							sprintf(socket_com, "%s", points);
-							send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
+							if (getActualIdGame(username) == getTurnPlayer(id_game)){
+								char* points = getPointsGame(id_game);
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "%s", points);
+								send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
+							}else{
+								char* mensaje = "-1";
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "%s", mensaje);
+								send(newSocket, socket_com, strlen(socket_com), 0);
+							}
 						}
 						if(strcmp(response, "3") == 0){
 							//estadisticas();
@@ -267,10 +276,17 @@ int main(){
 								bzero (&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
 								int id_game = atoi(response);
-								char* points = getPointsGame(id_game);
-								bzero (&socket_com, sizeof (socket_com));
-								sprintf(socket_com, "%s", points);
-								send(newSocket, socket_com, strlen(socket_com), 0); //Envia los usuarios y sus puntos
+								if (getActualIdGame(username) == getTurnPlayer(id_game)){
+									char* points = getPointsGame(id_game);
+									bzero (&socket_com, sizeof (socket_com));
+									sprintf(socket_com, "%s", points);
+									send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
+								}else{
+									char* mensaje = "-1";
+									bzero (&socket_com, sizeof (socket_com));
+									sprintf(socket_com, "%s", mensaje);
+									send(newSocket, socket_com, strlen(socket_com), 0);
+								}
 							}
 							if(strcmp(response, "3") == 0){
 								printf("El usuario eligio 3\n");
@@ -315,6 +331,29 @@ int createStatistics(int player, int game)
   }
   closeDatabase(db);
   return 0;
+}
+
+int getTurnPlayer(int id_game){
+	sqlite3 *db = openDatabase();
+  char sql[1024], out[2048];
+	int turn;
+  int rc;
+	sprintf(sql, "select distinct Game.turn from Game where Game.id_game = %d;", id_game);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get turn: %s\n", sqlite3_errmsg(db));
+    closeDatabase(db);
+  }
+  else
+  {
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			turn = sqlite3_column_int(stmt,0);
+		}
+  }
+  closeDatabase(db);
+	return(turn);
 }
 
 void updateGoodAnswerStatistics(int player, int game){
@@ -558,12 +597,8 @@ int insertPlayerIntoDB(char *username, char *password)
 int makeGame(char *player2, char *username)
 {
 	int id = getNewIdGame();
-	if (id==0){
-		id = 1;
-	}
-	else{
-		id = id /2 + 1;
-	}
+	id++;
+	
 	int id_player1 = getActualIdGame(username);
 	int id_player2 = atoi(player2);
 	insertPlayer(id, id_player1, id_player2);
@@ -828,7 +863,7 @@ int getNewIdGame()
   char sql[1024];
   int rc;
 	int newId = 0;
-	sprintf(sql, "select count(*) from Game");
+	sprintf(sql, "select coalesce(max(id_game),0) from Game");
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)

@@ -144,11 +144,17 @@ int main(){
 					bzero (&buffer, sizeof (buffer));
 					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
 					puntos = buffer;
-					while((puntos = strtok(puntos, separator)) != NULL){
+					if (strcmp(puntos,"-1") == 0){
+						printf("Lo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						continue;
+					}
+					else{
+						while((puntos = strtok(puntos, separator)) != NULL){
 						printf("%s\n", puntos);
 						puntos = NULL;
+						}
+						recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 					}
-					recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
@@ -234,11 +240,17 @@ int main(){
 					bzero (&buffer, sizeof (buffer));
 					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
 					puntos = buffer;
-					while((puntos = strtok(puntos, separator)) != NULL){
+					if (strcmp(puntos,"-1") == 0){
+						printf("Lo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						continue;
+					}
+					else{
+						while((puntos = strtok(puntos, separator)) != NULL){
 						printf("%s\n", puntos);
 						puntos = NULL;
+						}
+						recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 					}
-					recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
