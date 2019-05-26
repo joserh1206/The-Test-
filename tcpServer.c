@@ -107,17 +107,24 @@ int main(){
 				check = checkUsernamePassword(username, password);
 
 				if(check){
-					if (getNewIdGame() == 0){
-						buffer2 = getPlayersToGame2(username);
-					}
-					else{
-						buffer2 = getPlayersToGame(username);
-					}
-					sprintf(socket_com, "%s", buffer2);
-					send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+					sprintf(response, "1");
+					send(newSocket, response, strlen(response), 0); //Envia verificacion al cliente
 					bzero (&response, sizeof (response));
-					recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
-					int id_game = makeGame(response, username);
+					recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+					printf("Response del usuario: %s\n", response);
+					if(strcmp(response, "1") == 0){
+						printf("El usuario eligió 1\n");
+						if (getNewIdGame() == 0){
+							buffer2 = getPlayersToGame2(username);
+						}
+						else{
+							buffer2 = getPlayersToGame(username);
+						}
+						sprintf(socket_com, "%s", buffer2);
+						send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+						bzero (&response, sizeof (response));
+						recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+						int id_game = makeGame(response, username);
 						while(1){
 							bzero (&response, sizeof (response));
 							bzero(&socket_com, sizeof(socket_com));
@@ -150,6 +157,24 @@ int main(){
 							//5. Mostrar estadisticas (esta)
 							//OPCIONAL 1 -> Agregar preguntas desde el servidor 
 							//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
+							}
+						}
+						if(strcmp(response, "2") == 0){
+							//getGamesInProcess();
+							printf("El usuario eligio 2\n");
+							bzero (&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+						}
+						if(strcmp(response, "3") == 0){
+							//estadisticas();
+							printf("El usuario eligio 3\n");
+							bzero (&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+						}
+						if(strcmp(response, "4") == 0){
+							//estadisticas();
+							printf("El usuario eligio 4\n");
+							break;
 						}
 					}
 				else
@@ -162,36 +187,73 @@ int main(){
 					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
 						check = insertPlayerIntoDB(username, password);
 						if (check){
-							buffer2 = getPlayersToGame(username);
-							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
-							int id_game = makeGame(response, username);
-							while(1){
-								bzero (&response, sizeof (response));
-								bzero(&socket_com, sizeof(socket_com));
-								int id_question = getQuestionId();
-								insertQuestionToGame(id_game, id_question);
-								char* data = getQuestionData(id_question);
-								int id_question2 = getQuestionId();
-								insertQuestionToGame(id_game, id_question2);
-								char* data2 = getQuestionData(id_question2);
-								strcat(socket_com, data);
-								strcat(socket_com, "$");
-								bzero(&data, sizeof(data));
-								bzero(&id_question, sizeof(id_question));
-								id_question = getQuestionId();
-								data = getQuestionData(id_question);
-								strcat(socket_com, data);
-								send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
-								recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
-								answers = response;
-								while((answers = strtok(answers, separator)) != NULL){
-									printf("Respuesta: %s\n", answers);
-									answers = NULL;
+							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+							printf("Response del usuario: %s\n", response);
+							if(strcmp(response, "1") == 0){
+								printf("El usuario eligió 1\n");
+								if (getNewIdGame() == 0){
+									buffer2 = getPlayersToGame2(username);
 								}
-								recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
-							}
+								else{
+									buffer2 = getPlayersToGame(username);
+								}
+								sprintf(socket_com, "%s", buffer2);
+								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+								bzero (&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+								int id_game = makeGame(response, username);
+								while(1){
+									bzero (&response, sizeof (response));
+									bzero(&socket_com, sizeof(socket_com));
+									int id_question = getQuestionId();
+									insertQuestionToGame(id_game, id_question);
+									char* question1 = getQuestionData(id_question);
+									printf("Pregunta 1: %s",question1);
+									strcat(socket_com, question1);
+									strcat(socket_com, "$");
+									int id_question2 = getQuestionId();
+									insertQuestionToGame(id_game, id_question2);
+									char* question2 = getQuestionData(id_question2);
+									printf("Pregunta 2: %s",question2);
+									strcat(socket_com, question2);
+									printf("Preguntas: %s",socket_com);
+									send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
+									recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
+									answers = response;
+									setCorrectAnswer(answers[0]-'0',id_game,id_question);
+									setCorrectAnswer(answers[2]-'0',id_game,id_question2);
+									printf("Respuesta: %c\n", answers[2]);
+									bzero (&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
+									//2. Al entrar a este while hay que verificar que no existan partidas existentes
+										//->Si existen hay que traer las preguntas que respondió el otro jugador 
+										//->Si no existe no hay que cambiar nada
+									//3. Guardar y mostrar los puntos de los dos jugadores (esta)
+									//Al inicio mostrar los jugadores disponibles para iniciar una partida nueva (Como ya hace)
+										//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir) (esto ya esta)
+									//5. Mostrar estadisticas (esta)
+									//OPCIONAL 1 -> Agregar preguntas desde el servidor 
+									//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
+									}
+								}
+								if(strcmp(response, "2") == 0){
+									//getGamesInProcess();
+									printf("El usuario eligio 2\n");
+									bzero (&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+								}
+								if(strcmp(response, "3") == 0){
+									//estadisticas();
+									printf("El usuario eligio 3\n");
+									bzero (&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+								}
+								if(strcmp(response, "4") == 0){
+									//estadisticas();
+									printf("El usuario eligio 4\n");
+									break;
+								}
 						}
 					}
 					else{
