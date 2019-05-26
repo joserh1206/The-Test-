@@ -65,6 +65,15 @@ int main(){
 				printf("Está bien, sin rencores...\n");
 				break;
 			}
+			bzero (&buffer, sizeof (buffer));
+			recv(clientSocket, buffer, 1024, 0);
+			printf("%s",buffer);
+			if(strcmp(buffer, "Ok") == 0){
+				printf("Usuario registrado, BIENVENIDO\n");
+			}else{
+				printf("Se despicho tere\n");
+				break;
+			}
 			while (1)
 			{
 				bzero (&buffer, sizeof (buffer));

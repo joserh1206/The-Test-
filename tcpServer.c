@@ -16,9 +16,13 @@ int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
 char* getPlayersToGame(char *username);
 char* getPlayersToGame2(char *username);
-char* getGamesInProcess(int id_player);
+char* getGamesInProcess(char* username);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
+void updateGoodAnswerStatistics(int player, int game);
+void updateBadAnswerStatistics(int player, int game);
+void changeTurnGame(int id_game, int playerTurn);
+int createStatistics(int player, int game);
 int makeGame(char *player2, char *username);
 int getNewIdGame();
 int getActualIdGame(char *username);
@@ -45,7 +49,6 @@ int main(){
 	socklen_t addr_size;
 
 	char buffer[1024];
-	//char done[6] = "DONE";
 
 	pid_t childpid;
 
@@ -124,7 +127,10 @@ int main(){
 						send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 						bzero (&response, sizeof (response));
 						recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+						int id_player2 = atoi(response);
 						int id_game = makeGame(response, username);
+						createStatistics(getActualIdGame(username),id_game);
+						createStatistics(id_player2,id_game);
 						while(1){
 							bzero (&response, sizeof (response));
 							bzero(&socket_com, sizeof(socket_com));
@@ -145,8 +151,8 @@ int main(){
 							answers = response;
 							setCorrectAnswer(answers[0]-'0',id_game,id_question);
 							setCorrectAnswer(answers[2]-'0',id_game,id_question2);
-							printf("Respuesta: %c\n", answers[2]);
-							bzero (&response, sizeof (response));
+							changeTurnGame(id_game, id_player2);
+							bzero(&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
 							//2. Al entrar a este while hay que verificar que no existan partidas existentes
 								//->Si existen hay que traer las preguntas que respondió el otro jugador 
@@ -160,10 +166,13 @@ int main(){
 							}
 						}
 						if(strcmp(response, "2") == 0){
-							//getGamesInProcess();
 							printf("El usuario eligio 2\n");
+							char* players = getGamesInProcess(username);
+							printf ("%s", players);
+							sprintf(socket_com, "%s", players);
+							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
 						}
 						if(strcmp(response, "3") == 0){
 							//estadisticas();
@@ -188,6 +197,9 @@ int main(){
 						check = insertPlayerIntoDB(username, password);
 						if (check){
 							bzero (&response, sizeof (response));
+							sprintf(response, "Ok");
+							send(newSocket, response, strlen(response), 0);
+							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
 							printf("Response del usuario: %s\n", response);
 							if(strcmp(response, "1") == 0){
@@ -202,9 +214,12 @@ int main(){
 								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 								bzero (&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+								int id_player2 = atoi(response);
 								int id_game = makeGame(response, username);
+								createStatistics(getActualIdGame(username),id_game);
+								createStatistics(id_player2,id_game);
 								while(1){
-									bzero (&response, sizeof (response));
+									bzero(&response, sizeof (response));
 									bzero(&socket_com, sizeof(socket_com));
 									int id_question = getQuestionId();
 									insertQuestionToGame(id_game, id_question);
@@ -223,8 +238,8 @@ int main(){
 									answers = response;
 									setCorrectAnswer(answers[0]-'0',id_game,id_question);
 									setCorrectAnswer(answers[2]-'0',id_game,id_question2);
-									printf("Respuesta: %c\n", answers[2]);
-									bzero (&response, sizeof (response));
+									changeTurnGame(id_game, id_player2);
+									bzero(&response, sizeof (response));
 									recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle	
 									//2. Al entrar a este while hay que verificar que no existan partidas existentes
 										//->Si existen hay que traer las preguntas que respondió el otro jugador 
@@ -235,25 +250,25 @@ int main(){
 									//5. Mostrar estadisticas (esta)
 									//OPCIONAL 1 -> Agregar preguntas desde el servidor 
 									//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
-									}
 								}
-								if(strcmp(response, "2") == 0){
-									//getGamesInProcess();
-									printf("El usuario eligio 2\n");
-									bzero (&response, sizeof (response));
-									recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-								}
-								if(strcmp(response, "3") == 0){
-									//estadisticas();
-									printf("El usuario eligio 3\n");
-									bzero (&response, sizeof (response));
-									recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-								}
-								if(strcmp(response, "4") == 0){
-									//estadisticas();
-									printf("El usuario eligio 4\n");
-									break;
-								}
+							}
+							if(strcmp(response, "2") == 0){
+								printf("El usuario eligio 2\n");
+								char* players = getGamesInProcess(username);
+								sprintf(socket_com, "%s", players);
+								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+								bzero (&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
+							}
+							if(strcmp(response, "3") == 0){
+								printf("El usuario eligio 3\n");
+								bzero (&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+							}
+							if(strcmp(response, "4") == 0){
+								printf("El usuario eligio 4\n");
+								break;
+							}
 						}
 					}
 					else{
@@ -264,25 +279,101 @@ int main(){
 			}
 		}
 	}
-
 	close(newSocket);
-
-
 	return 0;
 }
 
-char* getGamesInProcess(int id_player){
+int createStatistics(int player, int game)
+{
+  sqlite3 *db = openDatabase();
+  char sql[1024];
+  int rc;
+  sprintf(sql, "insert into Statistics (id_user, id_game, good_answer, bad_answer) values (%d,%d,0,0);", player, game);
+  rc = sqlite3_exec(db, sql, callback, 0, 0);
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+    return -1;
+  }
+  else
+  {
+		printf("Estadistica registrado correctamente\n");
+  }
+  closeDatabase(db);
+  return 0;
+}
+
+void updateGoodAnswerStatistics(int player, int game){
+	sqlite3 *db = openDatabase();
+  char sql[1024];
+  int rc;
+  sprintf(sql, "update Statistics set good_answer = good_answer + 1 where Statistics.id_game = %d and Statistics.id_user = %d;", game, player);
+	rc = sqlite3_exec(db, sql, callback, 0, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+  }
+  else
+  {
+		printf("Se actualizo el campo de respuestas buenas\n");
+  }
+  closeDatabase(db);
+}
+
+void updateBadAnswerStatistics(int player, int game){
+	sqlite3 *db = openDatabase();
+  char sql[1024];
+  int rc;
+  sprintf(sql, "update Statistics set bad_answer = bad_answer + 1 where Statistics.id_game = %d and Statistics.id_user = %d;", game, player);
+	rc = sqlite3_exec(db, sql, callback, 0, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+  }
+  else
+  {
+		printf("Se actualizo el campo de respuestas buenas\n");
+  }
+  closeDatabase(db);
+}
+
+void changeTurnGame(int id_game,int playerTurn){
+	sqlite3 *db = openDatabase();
+  char sql[1024];
+  int rc;
+  sprintf(sql, "update Game set turn = %d where Game.id_game = %d;", playerTurn, id_game);
+	rc = sqlite3_exec(db, sql, callback, 0, 0);
+
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to insert data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+  }
+  else
+  {
+		printf("Turno actualizado\n");
+  }
+  closeDatabase(db);
+}
+
+char* getGamesInProcess(char* username){
 	sqlite3 *db = openDatabase();
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql, "select Game.id_game, Users.username from Users inner join Game on Users.id_user = Game.id_user where Game.id_game in (select distinct Game.id_game from Game where Game.id_user = %d) and not Users.id_user = %d;", id_player,id_player);
+	sprintf(sql, "select Game.id_game, Users.username from Users inner join Game on Users.id_user = Game.id_user where Game.id_game in (select distinct Game.id_game from Game where Game.id_user = (select Users.id_user from Users where Users.username = '%s')) and not Users.username = '%s';", username, username);
+	printf("%s", sql);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
+    closeDatabase(db);
   }
   else
   {
@@ -296,6 +387,7 @@ char* getGamesInProcess(int id_player){
 			strcat(out, "$");
 			counter++;
 		}
+		printf("%d", counter);
 		if(counter == 0){
 			buffer = "No se encuentran partidas activas para este jugador\n";
 		}
@@ -320,7 +412,7 @@ char* getPlayersToGame(char *username)
 	if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
+    closeDatabase(db);
   }
   else
   {
@@ -351,7 +443,7 @@ char* getPlayersToGame2(char *username)
 	if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
+    closeDatabase(db);
   }
   else
   {
@@ -376,35 +468,25 @@ int checkUsernamePassword(char *username, char *password)
   char sql[1024];
   int rc;
   sprintf(sql, "SELECT username, password FROM Users WHERE username = '%s' AND password = '%s';", username, password);
-  printf("1\n");
-  printf("2\n");
-  printf("%s\n", sql);
-  printf("3\n");
   rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
 
   if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
-    sqlite3_finalize(stmt);
-		sqlite3_close(db);
+		closeDatabase(db);
     return -1;
   }
   rc = sqlite3_step(stmt);
   if (rc == SQLITE_ROW) 
   {
-    printf("Existe\n");
-		sqlite3_finalize(stmt);
 		closeDatabase(db);
     return 1;
   }
   else
   {
-		printf("No existe\n");
-		sqlite3_finalize(stmt);
 		closeDatabase(db);
     return 0;
   }
-	sqlite3_finalize(stmt);
   closeDatabase(db);
   return 0;
 }
@@ -443,7 +525,6 @@ int makeGame(char *player2, char *username)
 	int id_player1 = getActualIdGame(username);
 	int id_player2 = atoi(player2);
 	insertPlayer(id, id_player1, id_player2);
-	printf("Pasa el insertPlayer\n");
 	return id;
 }
 
@@ -451,8 +532,7 @@ void insertPlayer(int id_game, int id_player1, int id_player2){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-  sprintf(sql, "insert into Game (id_game,id_user,points) values (%d, %d, 0), (%d, %d, 0);", id_game, id_player1, id_game, id_player2);
-  printf("sql query: %s\n", sql);
+  sprintf(sql, "insert into Game (id_game,id_user,points,turn) values (%d, %d, 0, %d), (%d, %d, 0, %d);", id_game, id_player1, id_player1, id_game, id_player2, id_player1);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -464,10 +544,7 @@ void insertPlayer(int id_game, int id_player1, int id_player2){
   {
 		printf("Partida registrada correctamente\n");
   }
-	printf("Llega1\n");
-	printf("Llega2\n");
   closeDatabase(db);
-	printf("Llega3\n");
 }
 
 int getActualIdGame(char *username)
@@ -522,7 +599,7 @@ int insertQuestionToGame(int id_game, int id_question){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-  sprintf(sql,"insert into QuestionsPerGame (id_game,id_question,good_option,active) values (%d,%d,null,0);",id_game,id_question);
+  sprintf(sql,"insert into QuestionsPerGame (id_game,id_question,good_option) values (%d,%d,null);",id_game,id_question);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -581,7 +658,6 @@ void setCorrectAnswer(int optionSelected, int id_game, int id_question){
   char sql[1024];
   int rc;
   sprintf(sql, "update QuestionsPerGame set good_option = %d where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d", optionSelected, id_game, id_question);
-  printf("sql query: %s\n", sql);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -642,7 +718,6 @@ int getValueQuestion(int id_question){
 			value = sqlite3_column_int(stmt,0);
 		}
   }
-	sqlite3_finalize(stmt);
   closeDatabase(db);
 	return(value);
 }
@@ -652,7 +727,6 @@ void addPoints(int id_game, int id_player, int value){
   char sql[1024];
   int rc;
   sprintf(sql, "update Game set points = points + %d where Game.id_game = %d and Game.id_user = %d", value, id_game, id_player);
-  printf("sql query: %s\n", sql);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -672,7 +746,6 @@ void addSuccess(int id_question){
   char sql[1024];
   int rc;
   sprintf(sql, "update Questions set correct = correct + 1 where Questions.Id_question = %d", id_question);
-  printf("sql query: %s\n", sql);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -693,7 +766,6 @@ void addMiss(int id_question)
   char sql[1024];
   int rc;
   sprintf(sql, "update Questions set incorrect = incorrect + 1 where Questions.Id_question = %d", id_question);
-  printf("sql query: %s\n", sql);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -745,7 +817,11 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     return 0;
 }
 
-void closeDatabase(sqlite3* db) { sqlite3_close(db); }
+void closeDatabase(sqlite3* db) { 
+	sqlite3_finalize(stmt);
+	sqlite3_close(db); 
+}
+
 sqlite3* openDatabase()
 {
 	int rc;
