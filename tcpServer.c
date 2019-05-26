@@ -17,6 +17,7 @@ void beginGame(char *username);
 char* getPlayersToGame(char *username);
 char* getPlayersToGame2(char *username);
 char* getGamesInProcess(char* username);
+char* getPointsGame(int id_game);
 static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 void closeDatabase(sqlite3* db);
 void updateGoodAnswerStatistics(int player, int game);
@@ -173,6 +174,11 @@ int main(){
 							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
+							int id_game = atoi(response);
+							char* points = getPointsGame(id_game);
+							bzero (&socket_com, sizeof (socket_com));
+							sprintf(socket_com, "%s", points);
+							send(newSocket, socket_com, strlen(socket_com), 0);
 						}
 						if(strcmp(response, "3") == 0){
 							//estadisticas();
@@ -260,6 +266,12 @@ int main(){
 								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 								bzero (&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para continuar la partida
+								int id_game = atoi(response);
+								char* points = getPointsGame(id_game);
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "%s", points);
+								send(newSocket, socket_com, strlen(socket_com), 0);
+
 							}
 							if(strcmp(response, "3") == 0){
 								printf("El usuario eligio 3\n");
@@ -344,6 +356,36 @@ void updateBadAnswerStatistics(int player, int game){
   closeDatabase(db);
 }
 
+char* getPointsGame(int id_game){
+	sqlite3 *db = openDatabase();
+  char sql[1024], out[2048];
+	char *buffer;
+  int rc;
+	sprintf(sql, "select Users.username, Game.points from Game inner join Users on Users.id_user = Game.id_user where Game.id_game = %d;", id_game);
+	printf("%s", sql);
+	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	sqlite3_bind_int(stmt,1,16);
+	if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed get players: %s\n", sqlite3_errmsg(db));
+    closeDatabase(db);
+  }
+  else
+  {
+		bzero(&out, sizeof(out));
+		bzero(&buffer, sizeof(buffer));
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			strcat(out, " Jugador: ");
+			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, " - Puntos: ");
+			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, "$");
+		}
+  }
+	closeDatabase(db);
+	return buffer;
+}
+
 void changeTurnGame(int id_game,int playerTurn){
 	sqlite3 *db = openDatabase();
   char sql[1024];
@@ -389,7 +431,6 @@ char* getGamesInProcess(char* username){
 			strcat(out, "$");
 			counter++;
 		}
-		printf("%d", counter);
 		if(counter == 0){
 			buffer = "No se encuentran partidas activas para este jugador\n";
 		}
@@ -397,7 +438,6 @@ char* getGamesInProcess(char* username){
 			buffer = out;
 		}
   }
-	
   closeDatabase(db);
 	return(buffer);
 }

@@ -140,6 +140,15 @@ int main(){
 					printf("Seleccione el numero del usuario con el que desea continuar la partida\n");
 					scanf("%s", &buffer[0]);
 					send(clientSocket, buffer, strlen(buffer), 0); //Envia numero de usuario para partida al servidor
+					char* puntos;
+					bzero (&buffer, sizeof (buffer));
+					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
+					puntos = buffer;
+					while((puntos = strtok(puntos, separator)) != NULL){
+						printf("%s\n", puntos);
+						puntos = NULL;
+					}
+					recv(clientSocket, buffer, 1024, 0);
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
@@ -221,6 +230,15 @@ int main(){
 					printf("Seleccione el numero del usuario con el que desea continuar la partida\n");
 					scanf("%s", &buffer[0]);
 					send(clientSocket, buffer, strlen(buffer), 0); //Envia numero de usuario para partida al servidor
+					char* puntos;
+					bzero (&buffer, sizeof (buffer));
+					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
+					puntos = buffer;
+					while((puntos = strtok(puntos, separator)) != NULL){
+						printf("%s\n", puntos);
+						puntos = NULL;
+					}
+					recv(clientSocket, buffer, 1024, 0);
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
