@@ -63,30 +63,28 @@ int main(){
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia respuesta al servidor
 			if(strcmp(buffer, "N") == 0){
 				printf("Está bien, sin rencores...\n");
-				break;
+				continue;
 			}
 			bzero (&buffer, sizeof (buffer));
 			recv(clientSocket, buffer, 1024, 0);
-			printf("%s",buffer);
 			if(strcmp(buffer, "Ok") == 0){
 				printf("Usuario registrado, BIENVENIDO\n");
 			}else{
-				printf("Se despicho tere\n");
-				break;
+				printf("Ha ocurrido un problema inesperado. Intentelo de nuevo\n");
+				continue;
 			}
 			while (1)
 			{
 				bzero (&buffer, sizeof (buffer));
-				printf("MENU\n");
+				printf("\n* ** * MENU * ** *\n");
 				printf("1. Iniciar una partida nueva\n");
 				printf("2. Continuar partida\n");
 				printf("3. Ver estadisticas\n");
 				printf("4. Salir\n");
 				scanf("%s", &buffer[0]);
-				printf("BUFFER Cliente: %s\n", buffer);
 				if((buffer[0] - '0') > 4){
 					printf("Debe ingresar una opcion válida\n");
-					break;
+					continue;
 				}
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia el numero de la opción
 				if(strcmp(buffer, "4") == 0){
@@ -95,7 +93,11 @@ int main(){
 				}
 				if(strcmp(buffer, "1") == 0){
 					bzero (&buffer, sizeof (buffer));
-					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores disponibles
+					bzero (&user_from_list, sizeof (user_from_list));
+					bzero (&questions, sizeof (questions));
+					bzero (&buffer2, sizeof (buffer2));
+					bzero (&bufferquestions, sizeof (bufferquestions));
+					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores disponibles o un codigo de error
 					user_from_list = buffer;
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
@@ -117,21 +119,36 @@ int main(){
 						printf("%s\n", questions);
 						questions = NULL;
 						//bzero (&buffer2, sizeof (buffer2));
+						valida:
 						printf("Seleccione una opción: ");
 						scanf("%s", &buffer2[0]);
+						if((buffer2[0] - '0') > 3){
+							printf("Debe ingresar una opcion válida\n");
+							goto valida;
+						}
+						else{
 						strcat(bufferquestions, buffer2);
 						strcat(bufferquestions, "$");
+						}
 					}
 					//printf("BUFFER LUEGO: %s\n", bufferquestions);
 					send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 					bzero (&buffer, sizeof (buffer));
 					printf("Espere a que el otro jugador responda\n");
-					recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+					continue;
 				}
 				if(strcmp(buffer, "2") == 0){
 					bzero (&buffer, sizeof (buffer));
+					bzero (&user_from_list, sizeof (user_from_list));
+					bzero (&questions, sizeof (questions));
+					bzero (&buffer2, sizeof (buffer2));
+					bzero (&bufferquestions, sizeof (bufferquestions));
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores
 					user_from_list = buffer;
+					if(strcmp(user_from_list, "-1") == 0){
+						printf("No tiene partidas activas actualmente\n");
+						continue;
+					}
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -153,11 +170,12 @@ int main(){
 						printf("%s\n", puntos);
 						puntos = NULL;
 						}
-						recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
+						continue;
 					}
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
+					bzero (&user_from_list, sizeof (user_from_list));					
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
 					user_from_list = buffer;
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
@@ -165,7 +183,7 @@ int main(){
 						user_from_list = NULL;
 					}
 					bzero (&buffer, sizeof (buffer));
-					break;
+					continue;
 				}
 			}			
 		}
@@ -173,16 +191,19 @@ int main(){
 			while (1)
 			{
 				bzero (&buffer, sizeof (buffer));
-				printf("MENU\n");
+				bzero (&user_from_list, sizeof (user_from_list));
+				bzero (&questions, sizeof (questions));
+				bzero (&buffer2, sizeof (buffer2));
+				bzero (&bufferquestions, sizeof (bufferquestions));
+				printf("\n* ** * MENU * ** *\n");
 				printf("1. Iniciar una partida nueva\n");
 				printf("2. Continuar partida\n");
 				printf("3. Ver estadisticas\n");
 				printf("4. Salir\n");
 				scanf("%s", &buffer[0]);
-				printf("BUFFER Cliente: %s\n", buffer);
 				if((buffer[0] - '0') > 4){
 					printf("Debe ingresar una opcion válida\n");
-					break;
+					continue;
 				}
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia el numero de la opción
 				if(strcmp(buffer, "4") == 0){
@@ -212,22 +233,36 @@ int main(){
 					while((questions = strtok(questions, separator)) != NULL){
 						printf("%s\n", questions);
 						questions = NULL;
-						//bzero (&buffer2, sizeof (buffer2));
+						valida2:
 						printf("Seleccione una opción: ");
 						scanf("%s", &buffer2[0]);
-						strcat(bufferquestions, buffer2);
-						strcat(bufferquestions, "$");
+						if((buffer2[0] - '0') > 3){
+							printf("Debe ingresar una opcion válida\n");
+							goto valida2;
+						}
+						else{
+							strcat(bufferquestions, buffer2);
+							strcat(bufferquestions, "$");
+						}
 					}
 					//printf("BUFFER LUEGO: %s\n", bufferquestions);
 					send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 					bzero (&buffer, sizeof (buffer));
 					printf("Espere a que el otro jugador responda\n");
-					recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+					continue;
 				}
 				if(strcmp(buffer, "2") == 0){
 					bzero (&buffer, sizeof (buffer));
+					bzero (&user_from_list, sizeof (user_from_list));
+					bzero (&questions, sizeof (questions));
+					bzero (&buffer2, sizeof (buffer2));
+					bzero (&bufferquestions, sizeof (bufferquestions));
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores
 					user_from_list = buffer;
+					if(strcmp(user_from_list, "-1") == 0){
+						printf("No tiene partidas activas actualmente\n");
+						continue;
+					}
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -246,14 +281,15 @@ int main(){
 					}
 					else{
 						while((puntos = strtok(puntos, separator)) != NULL){
-						printf("%s\n", puntos);
-						puntos = NULL;
+							printf("%s\n", puntos);
+							puntos = NULL;
 						}
-						recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
+						continue;
 					}
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
+					bzero (&user_from_list, sizeof (user_from_list));
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
 					user_from_list = buffer;
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
@@ -261,7 +297,7 @@ int main(){
 						user_from_list = NULL;
 					}
 					bzero (&buffer, sizeof (buffer));
-					break;
+					continue;
 				}
 			}			
 		}

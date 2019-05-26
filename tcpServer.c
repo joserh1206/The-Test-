@@ -211,13 +211,11 @@ int main(){
 					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
 						check = insertPlayerIntoDB(username, password);
 						if (check){
-							printf("Entra al check: %d\n", check);
 							bzero (&response, sizeof (response));
 							sprintf(response, "Ok");
 							send(newSocket, response, strlen(response), 0);
 							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-							printf("Response del usuario: %s\n", response);
 							if(strcmp(response, "1") == 0){
 								printf("El usuario eligió 1\n");
 								if (getNewIdGame() == 0){
@@ -471,7 +469,7 @@ char* getGamesInProcess(char* username){
 			counter++;
 		}
 		if(counter == 0){
-			buffer = "No se encuentran partidas activas para este jugador\n";
+			buffer = "-1";
 		}
 		else{
 			buffer = out;
