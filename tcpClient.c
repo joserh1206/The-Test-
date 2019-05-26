@@ -148,7 +148,7 @@ int main(){
 						printf("%s\n", puntos);
 						puntos = NULL;
 					}
-					recv(clientSocket, buffer, 1024, 0);
+					recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));
@@ -238,7 +238,7 @@ int main(){
 						printf("%s\n", puntos);
 						puntos = NULL;
 					}
-					recv(clientSocket, buffer, 1024, 0);
+					recv(clientSocket, buffer, 1024, 0); //Para que no se cicle
 				}
 				if(strcmp(buffer, "3") == 0){
 					bzero (&buffer, sizeof (buffer));

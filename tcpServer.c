@@ -178,7 +178,7 @@ int main(){
 							char* points = getPointsGame(id_game);
 							bzero (&socket_com, sizeof (socket_com));
 							sprintf(socket_com, "%s", points);
-							send(newSocket, socket_com, strlen(socket_com), 0);
+							send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
 						}
 						if(strcmp(response, "3") == 0){
 							//estadisticas();
@@ -270,8 +270,7 @@ int main(){
 								char* points = getPointsGame(id_game);
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", points);
-								send(newSocket, socket_com, strlen(socket_com), 0);
-
+								send(newSocket, socket_com, strlen(socket_com), 0); //Envia los usuarios y sus puntos
 							}
 							if(strcmp(response, "3") == 0){
 								printf("El usuario eligio 3\n");
@@ -362,7 +361,7 @@ char* getPointsGame(int id_game){
 	char *buffer;
   int rc;
 	sprintf(sql, "select Users.username, Game.points from Game inner join Users on Users.id_user = Game.id_user where Game.id_game = %d;", id_game);
-	printf("%s", sql);
+	//printf("%s", sql);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
@@ -375,13 +374,14 @@ char* getPointsGame(int id_game){
 		bzero(&out, sizeof(out));
 		bzero(&buffer, sizeof(buffer));
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			strcat(out, " Jugador: ");
+			strcat(out, "Jugador: ");
 			strcat(out, sqlite3_column_text(stmt,0));
 			strcat(out, " - Puntos: ");
 			strcat(out, sqlite3_column_text(stmt,1));
-			strcat(out, "$");
+			strcat(out, "\n$");
 		}
   }
+	buffer = out;
 	closeDatabase(db);
 	return buffer;
 }
