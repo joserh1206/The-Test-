@@ -189,12 +189,26 @@ int main(){
 								char* points = getPointsGame(id_game);
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", points);
-								send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
+								char* questions = getTwoQuestionsLastPLayer(id_game);
+								char questionsData[2048];
+								printf("Ultimas dos preguntas: %s\n", questions);
+								bzero(&questionsData, sizeof(questionsData));
+								sprintf(questionsData, "$");
+								while((questions = strtok(questions, separator)) != NULL){
+									printf("Pregunta: %s\n", questions);
+									//strcat(questionsData, getQuestionData(atoi(questions)));
+									//strcat(questionsData, "$");
+									questions = NULL;
+								}
+								printf("Questions data:\n %s\n", questionsData);
+								send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); 
 							}else{
 								char* mensaje = "-1";
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", mensaje);
-								send(newSocket, socket_com, strlen(socket_com), 0);
+								send(newSocket, socket_com, strlen(socket_com), 0); //Envia codigo de error
 								bzero(&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); 
 								if(strcmp(response, "#") == 0){
@@ -359,6 +373,7 @@ int main(){
 
 //Obtiene las ultimas dos preguntas respondidas
 char* getTwoQuestionsLastPLayer(int game){
+	printf("Entra en la funcion las2questions\n");
 	sqlite3 *db = openDatabase();
   char sql[1024], out[2048];
 	char *buffer;
@@ -375,9 +390,10 @@ char* getTwoQuestionsLastPLayer(int game){
   {
 		bzero(&out, sizeof(out));
 		bzero(&buffer, sizeof(buffer));
+		sprintf(out, "$");
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			strcat(out, sqlite3_column_text(stmt,0));
-			strcat(out, sqlite3_column_text(stmt,1));
+			strcat(out, getQuestionData(sqlite3_column_int(stmt,0)));
+			strcat(out, "$");
 		}
   }
 	buffer = out;
