@@ -103,6 +103,7 @@ int main(){
 				char *word, *type, *username, *password, *buffer2, *answers;
 				char response[4], socket_com[1024];
 				int check = 0;
+				new_game:
 				bzero (&username, sizeof (username));
 				bzero (&password, sizeof (password));
 				bzero (&buffer, sizeof (buffer));
@@ -202,9 +203,14 @@ int main(){
 							}	
 						}
 						if(strcmp(response, "3") == 0){
-							//estadisticas();
 							printf("El usuario eligio 3\n");
 							bzero(&response, sizeof (response));
+							int id_player = getActualIdGame(username);
+							//char* statistics = getRightAndWrongPlayer(id_player);
+							char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
+							bzero (&socket_com, sizeof (socket_com));
+							sprintf(socket_com, "%s", statistics);
+							send(newSocket, socket_com, strlen(socket_com), 0);
 							recv(newSocket, response, 1024, 0); 
 							if(strcmp(response, "#") == 0){
 								goto ciclo;
@@ -213,7 +219,7 @@ int main(){
 						if(strcmp(response, "4") == 0){
 							//estadisticas();
 							printf("El usuario eligio 4\n");
-							break;
+							goto new_game;
 						}
 					}
 				else
@@ -312,6 +318,12 @@ int main(){
 							if(strcmp(response, "3") == 0){
 								printf("El usuario eligio 3\n");
 								bzero (&response, sizeof (response));
+								int id_player = getActualIdGame(username);
+								//char* statistics = getRightAndWrongPlayer(id_player);
+								char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "%s", statistics);
+								send(newSocket, socket_com, strlen(socket_com), 0);
 								recv(newSocket, response, 1024, 0); 
 								if(strcmp(response, "#") == 0){
 									goto ciclo2;
@@ -319,7 +331,7 @@ int main(){
 							}
 							if(strcmp(response, "4") == 0){
 								printf("El usuario eligio 4\n");
-								break;
+								goto new_game;
 							}
 						}
 					}
@@ -367,7 +379,7 @@ char* getRightAndWrongPlayer(int player){
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql, "select sum(Statistics.good_answer), sum(Statistics.bad_answer) from Statistics where Statistics.id_user = %d;", player);
+	sprintf(sql, "select coalesce(sum(Statistics.good_answer), 0), coalesce(sum(Statistics.bad_answer), 0) from Statistics where Statistics.id_user = %d;", player);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
@@ -382,7 +394,7 @@ char* getRightAndWrongPlayer(int player){
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
 			strcat(out, "Preguntas acertadas: ");
 			strcat(out, sqlite3_column_text(stmt,0));
-			strcat(out, " - Preguntas fallidas: ");
+			strcat(out, "\nPreguntas fallidas: ");
 			strcat(out, sqlite3_column_text(stmt,1));
 		}
   }
@@ -397,6 +409,7 @@ char* getAllGamesAndStatisticsForPlayer(int player){
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
+	printf("Entra en la funcion\n");
 	sprintf(sql, "select Statistics.id_game, Statistics.good_answer, Statistics.bad_answer from Statistics where Statistics.id_user = %d;", player);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
@@ -409,6 +422,7 @@ char* getAllGamesAndStatisticsForPlayer(int player){
   {
 		bzero(&out, sizeof(out));
 		bzero(&buffer, sizeof(buffer));
+		sprintf(out, "$");
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
 			strcat(out, "Id del juego: ");
 			strcat(out, sqlite3_column_text(stmt,0));

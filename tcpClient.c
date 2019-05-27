@@ -181,7 +181,15 @@ int main(){
 					bzero (&buffer, sizeof (buffer));
 					bzero (&user_from_list, sizeof (user_from_list));					
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
+					if(strcmp(buffer, "$") == 0){
+						printf("\n* ** * Primero debe jugar una partida :) * ** *\n");
+						bzero(&buffer, sizeof (buffer));
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor						
+						continue;
+					}
 					user_from_list = buffer;
+					printf("\n* ** * Sus estadisticas * ** *\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -301,7 +309,15 @@ int main(){
 					bzero (&buffer, sizeof (buffer));
 					bzero (&user_from_list, sizeof (user_from_list));
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
+					if(strcmp(buffer, "$") == 0){
+						printf("\n* ** * Primero debe jugar una partida :) * ** *\n");
+						bzero (&buffer, sizeof (buffer));
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor						
+						continue;
+					}
 					user_from_list = buffer;
+					printf("\n* ** * Sus estadisticas * ** *\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
