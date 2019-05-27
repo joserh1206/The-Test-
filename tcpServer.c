@@ -400,9 +400,9 @@ char* getRightAndWrongPlayer(int player){
 		bzero(&out, sizeof(out));
 		bzero(&buffer, sizeof(buffer));
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			strcat(out, "Preguntas acertadas: ");
+			strcat(out, "Total de preguntas acertadas: ");
 			strcat(out, sqlite3_column_text(stmt,0));
-			strcat(out, "\nPreguntas fallidas: ");
+			strcat(out, "\nTotal de preguntas fallidas: ");
 			strcat(out, sqlite3_column_text(stmt,1));
 		}
   }
@@ -441,7 +441,13 @@ char* getAllGamesAndStatisticsForPlayer(int player){
 			strcat(out, "$");
 		}
   }
-	buffer = out;
+	if(strcmp(out, "$") == 0){
+		buffer = out;
+	}
+	else{
+		strcat(out, getRightAndWrongPlayer(player));
+		buffer = out;
+	}
 	closeDatabase(db);
 	return buffer;
 }
