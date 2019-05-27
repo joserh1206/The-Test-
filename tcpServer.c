@@ -194,7 +194,11 @@ int main(){
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", mensaje);
 								send(newSocket, socket_com, strlen(socket_com), 0);
-								goto ciclo;
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); 
+								if(strcmp(response, "#") == 0){
+									goto ciclo;
+								}	
 							}
 							bzero(&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); 
@@ -309,7 +313,11 @@ int main(){
 									bzero (&socket_com, sizeof (socket_com));
 									sprintf(socket_com, "%s", mensaje);
 									send(newSocket, socket_com, strlen(socket_com), 0);
-									goto ciclo2;
+									bzero(&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); 
+									if(strcmp(response, "#") == 0){
+										goto ciclo;
+									}	
 								}
 								if(strcmp(response, "#") == 0){
 									goto ciclo2;
@@ -429,7 +437,7 @@ char* getAllGamesAndStatisticsForPlayer(int player){
 			strcat(out, " - Preguntas acertadas: ");
 			strcat(out, sqlite3_column_text(stmt,1));
 			strcat(out, " - Preguntas fallidas: ");
-			strcat(out, sqlite3_column_text(stmt,0));
+			strcat(out, sqlite3_column_text(stmt,2));
 			strcat(out, "$");
 		}
   }

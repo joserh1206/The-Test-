@@ -148,9 +148,12 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores
 					user_from_list = buffer;
 					if(strcmp(user_from_list, "-1") == 0){
-						printf("No tiene partidas activas actualmente\n");
+						printf("\n* ** * No tiene partidas activas actualmente * ** *\n");
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
+					printf("\n* ** *Partidas activas* ** *\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -164,7 +167,10 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
 					puntos = buffer;
 					if (strcmp(puntos,"-1") == 0){
-						printf("Lo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						bzero (&buffer, sizeof (buffer));
+						printf("\nLo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
 					else{
@@ -276,9 +282,12 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores
 					user_from_list = buffer;
 					if(strcmp(user_from_list, "-1") == 0){
-						printf("No tiene partidas activas actualmente\n");
+						printf("\n* ** * No tiene partidas activas actualmente * ** *\n");
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
+					printf("\n* ** *Partidas activas* ** *\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -292,7 +301,10 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe puntos jugadores
 					puntos = buffer;
 					if (strcmp(puntos,"-1") == 0){
-						printf("Lo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						bzero (&buffer, sizeof (buffer));
+						printf("\nLo lamento, no esta en su turno de partida, por favor espere su turno...\n");
+						sprintf(buffer, "#");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
 					}
 					else{
