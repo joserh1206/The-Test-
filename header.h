@@ -1,4 +1,4 @@
-#define PORT 4444
+#define PORT 4442
 #define IP_ADDR "172.19.127.63"
 int getRival(int game, int actual);
 char* checkAnswer(int id_game, int response2, int response, char* username);
