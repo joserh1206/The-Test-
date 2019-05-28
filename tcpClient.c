@@ -337,8 +337,10 @@ int main(){
 							scanf("%s", &buffer2[0]);
 							send(clientSocket, buffer2, strlen(buffer), 0); //Envia respuesta
 							recv(clientSocket, buffer2, 1024, 0); //Recibe acuse de recibido
+							printf("%s", buffer2);
 							preguntas = NULL;
 						}
+						
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
