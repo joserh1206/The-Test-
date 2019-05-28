@@ -11,7 +11,9 @@
 #define PORT 4444
 
 sqlite3* openDatabase();
+int getRival(int game, int actual);
 char* checkAnswer(int id_game, int response2, int response, char* username);
+void getNewQuestions(int id_game, char socket_com[1024], int newSocket, char response[4], char* answers, int id_player2);
 int checkUsernamePassword(char *username, char *password);
 int insertPlayerIntoDB(char *username, char *password);
 void beginGame(char *username);
@@ -142,41 +144,14 @@ int main(){
 						while(1){
 							bzero (&response, sizeof (response));
 							bzero(&socket_com, sizeof(socket_com));
-							int id_question = getQuestionId();
-							insertQuestionToGame(id_game, id_question);
-							char* question1 = getQuestionData(id_question);
-							printf("Pregunta 1: %s",question1);
-							strcat(socket_com, question1);
-							strcat(socket_com, "$");
-							int id_question2 = getQuestionId();
-							insertQuestionToGame(id_game, id_question2);
-							char* question2 = getQuestionData(id_question2);
-							printf("Pregunta 2: %s",question2);
-							strcat(socket_com, question2);
-							printf("Preguntas: %s",socket_com);
-							send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
-							recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
-							answers = response;
-							setCorrectAnswer(answers[0]-'0',id_game,id_question);
-							setCorrectAnswer(answers[2]-'0',id_game,id_question2);
-							changeTurnGame(id_game, id_player2);
-							bzero(&response, sizeof (response));
+							getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+							bzero (&response, sizeof (response));
 							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
-//							printf("Ultimo recv %s\n", response);
 							if(strcmp(response, "#") == 0){
 								goto ciclo;
 							}	
-							//2. Al entrar a este while hay que verificar que no existan partidas existentes
-								//->Si existen hay que traer las preguntas que respondió el otro jugador 
-								//->Si no existe no hay que cambiar nada
-							//3. Guardar y mostrar los puntos de los dos jugadores (esta)
-							//Al inicio mostrar los jugadores disponibles para iniciar una partida nueva (Como ya hace)
-								//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir) (esto ya esta)
-							//5. Mostrar estadisticas (esta)
-							//OPCIONAL 1 -> Agregar preguntas desde el servidor 
-							//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
-							}
 						}
+					}
 						if(strcmp(response, "2") == 0){
 							printf("El usuario eligio 2\n");
 							char* players = getGamesInProcess(username);
@@ -211,17 +186,21 @@ int main(){
 								//********************************************************************************
 								bzero(&response2, sizeof (response2));
 								bzero(&response, sizeof (response));
-								recv(newSocket, response2, 1024, 0); //Recibe pregunta 1
+								recv(newSocket, response2, 1024, 0); //Recibe pregunta 2
 								printf("\nPregunta 2 -> %s\n", response2);
 								data = getQuestionData(atoi(response2));
 								send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
 								bzero(&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 1
+								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 2
 								printf("\nRespuesta 2 -> %s\n", response);
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
 								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
-								
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
+								int id_player2 = getRival(id_game, getActualIdGame(username));
+								getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+								changeTurnGame(id_game, id_player2);
 							}else{
 								char* mensaje = "-1";
 								bzero (&socket_com, sizeof (socket_com));
@@ -294,38 +273,12 @@ int main(){
 								while(1){
 									bzero(&response, sizeof (response));
 									bzero(&socket_com, sizeof(socket_com));
-									int id_question = getQuestionId();
-									insertQuestionToGame(id_game, id_question);
-									char* question1 = getQuestionData(id_question);
-									printf("Pregunta 1: %s",question1);
-									strcat(socket_com, question1);
-									strcat(socket_com, "$");
-									int id_question2 = getQuestionId();
-									insertQuestionToGame(id_game, id_question2);
-									char* question2 = getQuestionData(id_question2);
-									printf("Pregunta 2: %s",question2);
-									strcat(socket_com, question2);
-									printf("Preguntas: %s",socket_com);
-									send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
-									recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
-									answers = response;
-									setCorrectAnswer(answers[0]-'0',id_game,id_question);
-									setCorrectAnswer(answers[2]-'0',id_game,id_question2);
-									changeTurnGame(id_game, id_player2);
+									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
 									bzero(&response, sizeof (response));
 									recv(newSocket, response, 1024, 0); 
 									if(strcmp(response, "#") == 0){
 										goto ciclo2;
 									}	
-									//2. Al entrar a este while hay que verificar que no existan partidas existentes
-										//->Si existen hay que traer las preguntas que respondió el otro jugador 
-										//->Si no existe no hay que cambiar nada
-									//3. Guardar y mostrar los puntos de los dos jugadores (esta)
-									//Al inicio mostrar los jugadores disponibles para iniciar una partida nueva (Como ya hace)
-										//4. ->Además mostrar si desea continuar una partida iniciada (En caso de existir) (esto ya esta)
-									//5. Mostrar estadisticas (esta)
-									//OPCIONAL 1 -> Agregar preguntas desde el servidor 
-									//OPCIONAL 2 -> Enviar respuestas de los jugadores por correo
 								}
 							}
 							if(strcmp(response, "2") == 0){
@@ -440,12 +393,34 @@ int getCorrectAnswer(int game, int question)
   {
 		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
 			good_answer = sqlite3_column_int(stmt,0);
-			printf("\nGOOD ANSW1 -> %d\n", good_answer);
 		}
-		printf("\nGOOD ANSW -> %d\n", good_answer);
   }
   closeDatabase(db);
 	return(good_answer);
+}
+
+int getRival(int game, int actual)
+{
+  sqlite3 *db = openDatabase();
+  char sql[1024];
+	int player;
+  int rc;
+  sprintf(sql, "select Game.id_user from Game where Game.id_game = %d and not Game.id_user = %d;", game, actual);
+  rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+  if (rc != SQLITE_OK)
+  {
+    fprintf(stderr, "Failed to select data: %s\n", sqlite3_errmsg(db));
+		closeDatabase(db);
+    return -1;
+  }
+  else
+  {
+		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
+			player = sqlite3_column_int(stmt,0);
+		}
+  }
+  closeDatabase(db);
+	return(player);
 }
 
 //Obtiene la suma de los acierto y los fallos de un jugador
@@ -561,6 +536,27 @@ int getTurnPlayer(int id_game){
   }
   closeDatabase(db);
 	return(turn);
+}
+
+void getNewQuestions(int id_game, char socket_com[1024], int newSocket, char response[4], char* answers, int id_player2){
+	int id_question = getQuestionId();
+	insertQuestionToGame(id_game, id_question);
+	char* question1 = getQuestionData(id_question);
+	printf("Pregunta 1: %s",question1);
+	strcat(socket_com, question1);
+	strcat(socket_com, "$");
+	int id_question2 = getQuestionId();
+	insertQuestionToGame(id_game, id_question2);
+	char* question2 = getQuestionData(id_question2);
+	printf("Pregunta 2: %s",question2);
+	strcat(socket_com, question2);
+	printf("Preguntas: %s",socket_com);
+	send(newSocket, socket_com, strlen(socket_com), 0); //Se envian las 2 preguntas al usuario
+	recv(newSocket, response, 1024, 0); //Recibe las respuestas del usuario para las 2 preguntas
+	answers = response;
+	setCorrectAnswer(answers[0]-'0',id_game,id_question);
+	setCorrectAnswer(answers[2]-'0',id_game,id_question2);
+	changeTurnGame(id_game, id_player2);
 }
 
 void updateGoodAnswerStatistics(int player, int game){

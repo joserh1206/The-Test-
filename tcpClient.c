@@ -340,7 +340,35 @@ int main(){
 							printf("%s", buffer2);
 							preguntas = NULL;
 						}
-						
+						sprintf(buffer, "&");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
+						bzero(&buffer, sizeof (buffer));
+						recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+						printf("\n*-*-*-*-Nuevas preguntas-*-*-*-*\n");
+						questions = buffer;
+						sprintf(questions, "%s", buffer);
+						//bzero (&buffer, sizeof (buffer));
+						//printf("QUESTIONS: %s\n", questions);
+						while((questions = strtok(questions, separator)) != NULL){
+							printf("%s\n", questions);
+							questions = NULL;
+							valida2_1:
+							printf("Seleccione una opción: ");
+							scanf("%s", &buffer2[0]);
+							if((buffer2[0] - '0') > 3){
+								printf("Debe ingresar una opcion válida\n");
+								goto valida2_1;
+							}
+							else{
+								strcat(bufferquestions, buffer2);
+								strcat(bufferquestions, "$");
+							}
+						}
+						//printf("BUFFER LUEGO: %s\n", bufferquestions);
+						send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
+						bzero (&buffer, sizeof (buffer));
+						printf("Espere a que el otro jugador responda\n");
+						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
