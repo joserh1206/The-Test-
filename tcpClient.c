@@ -63,6 +63,8 @@ int main(){
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia respuesta al servidor
 			if(strcmp(buffer, "N") == 0){
 				printf("Está bien, sin rencores...\n");
+				sprintf(buffer, "#");
+				send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 				continue;
 			}
 			bzero (&buffer, sizeof (buffer));
@@ -135,6 +137,7 @@ int main(){
 					send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
 					bzero (&buffer, sizeof (buffer));
 					printf("Espere a que el otro jugador responda\n");
+					
 					sprintf(buffer, "#");
 					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 					continue;
@@ -178,6 +181,11 @@ int main(){
 							printf("%s\n", puntos);
 							puntos = NULL;
 						}
+						sprintf(buffer, "&");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
+						bzero (&buffer, sizeof (buffer));
+						recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas
+						printf("\nPreguntas: %s\n", buffer);
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
@@ -311,6 +319,25 @@ int main(){
 						while((puntos = strtok(puntos, separator)) != NULL){
 							printf("%s\n", puntos);
 							puntos = NULL;
+						}
+						sprintf(buffer, "&");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
+						bzero (&buffer, sizeof (buffer));
+						recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas
+						char* preguntas;
+						preguntas = buffer;
+						while((preguntas = strtok(preguntas, separator)) != NULL){
+							bzero (&buffer2, sizeof (buffer2));
+							sprintf(buffer2, "%s", preguntas);
+							send(clientSocket, buffer2, strlen(buffer), 0); //Envia pregunta 
+							recv(clientSocket, buffer2, 1024, 0); //Recibe la data de la pregunta
+							printf("Pregunta:\n %s\n", buffer2);
+							bzero (&buffer2, sizeof (buffer2));
+							printf("Respuesta: ");
+							scanf("%s", &buffer2[0]);
+							send(clientSocket, buffer2, strlen(buffer), 0); //Envia respuesta
+							recv(clientSocket, buffer2, 1024, 0); //Recibe acuse de recibido
+							preguntas = NULL;
 						}
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor

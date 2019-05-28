@@ -190,20 +190,35 @@ int main(){
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", points);
 								char* questions = getTwoQuestionsLastPLayer(id_game);
-								char questionsData[2048];
-								printf("Ultimas dos preguntas: %s\n", questions);
-								bzero(&questionsData, sizeof(questionsData));
-								sprintf(questionsData, "$");
-								while((questions = strtok(questions, separator)) != NULL){
-									printf("Pregunta: %s\n", questions);
-									//strcat(questionsData, getQuestionData(atoi(questions)));
-									//strcat(questionsData, "$");
-									questions = NULL;
-								}
-								printf("Questions data:\n %s\n", questionsData);
+								char* data;
+								//sprintf("Ultimas dos preguntas: %s\n", questions);
 								send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
 								bzero(&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); 
+								send(newSocket, questions, strlen(questions), 0); //Envia la preguntas
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe pregunta 1
+								printf("\nPregunta 1 -> %s\n", response);
+								data = getQuestionData(atoi(response));
+								send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 1
+								printf("\nRespuesta 1 -> %s\n", response);
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "&");
+								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
+								//********************************************************************************
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe pregunta 1
+								printf("\nPregunta 2 -> %s\n", response);
+								data = getQuestionData(atoi(response));
+								send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
+								bzero(&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 1
+								printf("\nRespuesta 2 -> %s\n", response);
+								bzero (&socket_com, sizeof (socket_com));
+								sprintf(socket_com, "&");
+								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
 							}else{
 								char* mensaje = "-1";
 								bzero (&socket_com, sizeof (socket_com));
@@ -373,14 +388,13 @@ int main(){
 
 //Obtiene las ultimas dos preguntas respondidas
 char* getTwoQuestionsLastPLayer(int game){
-	printf("Entra en la funcion las2questions\n");
 	sqlite3 *db = openDatabase();
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
 	sprintf(sql, "select QuestionsPerGame.id_question from QuestionsPerGame where QuestionsPerGame.id_game = %d limit 2 offset (select count(*) from QuestionsPerGame where QuestionsPerGame.id_game = %d)-2;", game, game);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-	sqlite3_bind_int(stmt,1,16);
+	//sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
   {
     fprintf(stderr, "Failed get questions: %s\n", sqlite3_errmsg(db));
@@ -391,11 +405,14 @@ char* getTwoQuestionsLastPLayer(int game){
 		bzero(&out, sizeof(out));
 		bzero(&buffer, sizeof(buffer));
 		sprintf(out, "$");
-		while((rc=sqlite3_step(stmt)) == SQLITE_ROW){
-			strcat(out, getQuestionData(sqlite3_column_int(stmt,0)));
+		
+		while(sqlite3_step(stmt) != SQLITE_DONE){
+			strcat(out, sqlite3_column_text(stmt,0));
 			strcat(out, "$");
 		}
+
   }
+	//printf("Out: %s\n", out);
 	buffer = out;
 	closeDatabase(db);
 	return buffer;
@@ -878,6 +895,7 @@ int insertQuestionToGame(int id_game, int id_question){
 
 char* getQuestionData(int id_question)
 {
+	printf("Entra a questionsData con el id: %d\n", id_question);
   sqlite3 *db = openDatabase();
   char sql[1024], out[2048];
 	char *buffer;
@@ -909,6 +927,7 @@ char* getQuestionData(int id_question)
 			strcat(out, "\n");
 		}
 		buffer = out;
+		printf("Buffer data:\n %s\n", buffer);
   }
   closeDatabase(db);
 	return(buffer);
