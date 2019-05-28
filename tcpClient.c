@@ -332,9 +332,14 @@ int main(){
 							send(clientSocket, buffer2, strlen(buffer), 0); //Envia pregunta 
 							recv(clientSocket, buffer2, 1024, 0); //Recibe la data de la pregunta
 							printf("Pregunta:\n %s\n", buffer2);
+							valida3:
 							bzero (&buffer2, sizeof (buffer2));
 							printf("Respuesta: ");
 							scanf("%s", &buffer2[0]);
+							if((buffer2[0] - '0') > 3){
+								printf("Debe ingresar una opcion válida\n");
+								goto valida3;
+							}
 							send(clientSocket, buffer2, strlen(buffer), 0); //Envia respuesta
 							recv(clientSocket, buffer2, 1024, 0); //Recibe acuse de recibido
 							printf("%s", buffer2);

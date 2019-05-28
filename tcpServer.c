@@ -199,6 +199,7 @@ int main(){
 								sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
 								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
 								bzero(&response, sizeof (response));
+								bzero(&socket_com, strlen(socket_com));
 								recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
 								int id_player2 = getRival(id_game, getActualIdGame(username));
 								getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
