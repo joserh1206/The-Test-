@@ -126,6 +126,7 @@ int main(){
 					bzero (&response, sizeof (response));
 					recv(newSocket, response, 1024, 0); //Espera por opcion del menu
 					if(strcmp(response, "1") == 0){
+						bzero(&socket_com, sizeof(socket_com));
 						printf("El usuario eligió 1\n");
 						if (getNewIdGame() == 0){
 							buffer2 = getPlayersToGame2(username);
@@ -220,6 +221,7 @@ int main(){
 							}	
 						}
 						if(strcmp(response, "3") == 0){
+							bzero(&socket_com, sizeof(socket_com));
 							printf("El usuario eligio 3\n");
 							bzero(&response, sizeof (response));
 							int id_player = getActualIdGame(username);
