@@ -153,6 +153,7 @@ int main(){
 						}
 					}
 						if(strcmp(response, "2") == 0){
+							bzero(&socket_com, sizeof(socket_com));
 							printf("El usuario eligio 2\n");
 							char* players = getGamesInProcess(username);
 							printf ("%s", players);
