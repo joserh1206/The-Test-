@@ -61,7 +61,7 @@ int main(){
 			printf("El usuario ingresado no se encuentra en la BD, desea agregarlo? (S/N):\n");
 			scanf("%s", &buffer[0]);
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia respuesta al servidor
-			if(strcmp(buffer, "N") == 0){
+			if(strcmp(buffer, "N") == 0 || strcmp(buffer, "n") == 0){
 				printf("Está bien, sin rencores...\n");
 				sprintf(buffer, "#");
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
@@ -185,7 +185,56 @@ int main(){
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
 						bzero (&buffer, sizeof (buffer));
 						recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas
-						printf("\nPreguntas: %s\n", buffer);
+						char* preguntas;
+						preguntas = buffer;
+						while((preguntas = strtok(preguntas, separator)) != NULL){
+							bzero (&buffer2, sizeof (buffer2));
+							sprintf(buffer2, "%s", preguntas);
+							send(clientSocket, buffer2, strlen(buffer), 0); //Envia pregunta 
+							recv(clientSocket, buffer2, 1024, 0); //Recibe la data de la pregunta
+							printf("Pregunta:\n %s\n", buffer2);
+							valida3_1:
+							bzero (&buffer2, sizeof (buffer2));
+							printf("Respuesta: ");
+							scanf("%s", &buffer2[0]);
+							if((buffer2[0] - '0') > 3){
+								printf("Debe ingresar una opcion válida\n");
+								goto valida3_1;
+							}
+							send(clientSocket, buffer2, strlen(buffer), 0); //Envia respuesta
+							recv(clientSocket, buffer2, 1024, 0); //Recibe acuse de recibido
+							printf("%s", buffer2);
+							preguntas = NULL;
+						}
+						sprintf(buffer, "&");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
+						bzero(&buffer, sizeof (buffer));
+						recv(clientSocket, buffer, 1024, 0); //Recibe las preguntas del servidor
+						printf("\n*-*-*-*-Nuevas preguntas-*-*-*-*\n");
+						questions = buffer;
+						sprintf(questions, "%s", buffer);
+						//bzero (&buffer, sizeof (buffer));
+						//printf("QUESTIONS: %s\n", questions);
+						while((questions = strtok(questions, separator)) != NULL){
+							printf("%s\n", questions);
+							questions = NULL;
+							valida2_2:
+							printf("Seleccione una opción: ");
+							scanf("%s", &buffer2[0]);
+							if((buffer2[0] - '0') > 3){
+								printf("Debe ingresar una opcion válida\n");
+								goto valida2_2;
+							}
+							else{
+								strcat(bufferquestions, buffer2);
+								strcat(bufferquestions, "$");
+							}
+						}
+						//printf("BUFFER LUEGO: %s\n", bufferquestions);
+						send(clientSocket, bufferquestions, strlen(bufferquestions), 0); //Envia las respuestas al servidor
+						bzero (&buffer, sizeof (buffer));
+						printf("Espere a que el otro jugador responda\n");
+						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
