@@ -100,7 +100,7 @@ int main(){
 					bzero (&bufferquestions, sizeof (bufferquestions));
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores disponibles o un codigo de error
 					user_from_list = buffer;
-					printf("\n* *** * Jugadores * *** *\n")
+					printf("\n* *** * Jugadores * *** *\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
