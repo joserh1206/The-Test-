@@ -7,7 +7,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "header.h"
+#define PORT 4442
+#define IP_ADDR "172.19.127.63"
 
 int main(){
 
