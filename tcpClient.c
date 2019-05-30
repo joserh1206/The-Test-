@@ -8,7 +8,8 @@
 #include <arpa/inet.h>
 
 #define PORT 4442
-#define IP_ADDR "172.19.127.63"
+//#define IP_ADDR "172.19.127.63"
+#define IP_ADDR "127.0.0.1"
 
 int main(){
 

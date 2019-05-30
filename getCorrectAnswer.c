@@ -30,6 +30,7 @@ char* checkAnswer(int id_game, int response2, int response, char* username){
 		int id_player = getActualIdGame(username);
 		addSuccess(response2);
 		updateGoodAnswerStatistics(id_player, id_game);
+		updateLevel(getValueQuestion(response2),id_player,id_game);
 		addPoints(id_game, id_player, getValueQuestion(response2));
 		return "\n* *** * Felicidades acertó la pregunta * ** *\n";	
 	}

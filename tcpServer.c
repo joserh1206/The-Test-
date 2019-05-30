@@ -206,7 +206,6 @@ int main(){
 							printf("El usuario eligio 3\n");
 							bzero(&response, sizeof (response));
 							int id_player = getActualIdGame(username);
-							//char* statistics = getRightAndWrongPlayer(id_player);
 							char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
 							bzero (&socket_com, sizeof (socket_com));
 							sprintf(socket_com, "%s", statistics);
