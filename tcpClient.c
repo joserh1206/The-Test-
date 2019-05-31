@@ -15,9 +15,6 @@ int main(){
 
 	int clientSocket, ret;
 	struct sockaddr_in serverAddr;
-	char buffer[1024];
-	char buffer2[1024];
-	char bufferquestions[1024];
 
 	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if(clientSocket < 0){
@@ -40,6 +37,9 @@ int main(){
 
 	while(1){
 		const char separator[2] = "$";
+		char buffer[1024];
+		char buffer2[1024];
+		char bufferquestions[1024];
 		char *user_from_list, *questions, *answers;
 		bzero (&buffer, sizeof (buffer));
 		bzero (&buffer2, sizeof (buffer2));
@@ -84,6 +84,7 @@ int main(){
 				printf("2. Continuar partida\n");
 				printf("3. Ver estadisticas\n");
 				printf("4. Salir\n");
+				printf("Seleccione una opción: ");
 				scanf("%s", &buffer[0]);
 				if((buffer[0] - '0') > 4){
 					printf("Debe ingresar una opcion válida\n");
@@ -270,6 +271,7 @@ int main(){
 				printf("2. Continuar partida\n");
 				printf("3. Ver estadisticas\n");
 				printf("4. Salir\n");
+				printf("Seleccione una opción: ");
 				scanf("%s", &buffer[0]);
 				if((buffer[0] - '0') > 4){
 					printf("Debe ingresar una opcion válida\n");

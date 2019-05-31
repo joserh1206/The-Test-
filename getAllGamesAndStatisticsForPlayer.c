@@ -4,7 +4,7 @@ char* getAllGamesAndStatisticsForPlayer(int player){
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql, "select Statistics.id_game, Statistics.good_answer, Statistics.bad_answer from Statistics where Statistics.id_user = %d;", player);
+	sprintf(sql, "select Statistics.id_game, Statistics.good_answer, Statistics.bad_answer, Game.level_player from Statistics inner join Game on Statistics.id_game = Game.id_game where Statistics.id_user = %d and Game.id_user = %d;", player, player);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
@@ -24,6 +24,8 @@ char* getAllGamesAndStatisticsForPlayer(int player){
 			strcat(out, sqlite3_column_text(stmt,1));
 			strcat(out, " - Preguntas fallidas: ");
 			strcat(out, sqlite3_column_text(stmt,2));
+			strcat(out, " - Nivel: ");
+			strcat(out, sqlite3_column_text(stmt,3));
 			strcat(out, "$");
 		}
   }

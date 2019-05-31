@@ -34,7 +34,7 @@ void updateLevel(int points, int player, int game){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-  sprintf(sql, "update Game set level_player = case when points+%d > 100 then level_player+1 else level_player end where id_user = %d and id_game = %d", points, game, player);
+  sprintf(sql, "update Game set level_player = case when points+%d > 100 then level_player+1 else level_player end where id_user = %d and id_game = %d", points, player, game);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)

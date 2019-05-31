@@ -41,8 +41,6 @@ int main(){
 
 	socklen_t addr_size;
 
-	char buffer[1024];
-
 	pid_t childpid;
 
 	addr_size = sizeof(struct sockaddr_in);
@@ -55,7 +53,7 @@ int main(){
 	printf("[+]Server Socket is created.\n");
 
 	int on=1;
-  setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+  	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
 
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -87,6 +85,7 @@ int main(){
 			char *user_id;
 			while(1){
 				const char separator[2] = "$";
+				char buffer[1024];
 				char *word, *type, *username, *password, *buffer2, *answers;
 				char response[4], socket_com[1024];
 				int check = 0;
@@ -217,7 +216,7 @@ int main(){
 						}
 						if(strcmp(response, "4") == 0){
 							//estadisticas();
-							printf("El usuario eligio 4\n");
+							printf("El usuario %s cerró la sesión\n", username);
 							goto new_game;
 						}
 					}
@@ -348,7 +347,7 @@ int main(){
 								}	
 							}
 							if(strcmp(response, "4") == 0){
-								printf("El usuario eligio 4\n");
+								printf("El usuario %s cerró la sesión\n", username);
 								goto new_game;
 							}
 						}
