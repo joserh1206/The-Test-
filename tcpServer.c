@@ -31,17 +31,20 @@
 #include "callback.c"
 #include "dataBase.c"
 #include "titles.c"
+#include "questionsCRUD.c"
 
 int main(){
 	char buffer_menu[1024];
+	menuServer:
 	printServerTitle();
 	bzero (&buffer_menu, sizeof (buffer_menu));
 	printf("-+ + -- ++ -- ++ Menu ++ -- ++ -- + -+\n");
 	printf("1. Iniciar el servidor\n");
-	printf("2. Eliminar preguntas\n");
-	printf("3. Agregar preguntas\n");
-	printf("4. Modificar valores de preguntas\n");
-	printf("5. Ver estadísticas\n");
+	printf("2. Ver preguntas\n");
+	printf("3. Eliminar preguntas\n");
+	printf("4. Agregar preguntas\n");
+	printf("5. Modificar valores de preguntas\n");
+	printf("6. Ver estadísticas\n");
 	printf("Seleccione una opción: ");
 	scanf("%s", &buffer_menu[0]);
 
@@ -80,7 +83,7 @@ int main(){
 			printf("[-]Error in binding.\n");
 			exit(1);
 		}
-		printf("\[+]Puerto -> %d\n", PORT);
+		printf("\n[+]Puerto -> %d\n", PORT);
 
 		if(listen(sockfd, 10) == 0){
 			printf("[+]Esperando....\n");
@@ -198,6 +201,7 @@ int main(){
 									int id_player2 = getRival(id_game, getActualIdGame(username));
 									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
 									changeTurnGame(id_game, id_player2);
+									addIterationGame(id_game);
 								}else{
 									char* mensaje = "-1";
 									bzero (&socket_com, sizeof (socket_com));
@@ -288,6 +292,10 @@ int main(){
 									recv(newSocket, response, 1024, 0); //Recibe numero del juego para continuar la partida
 									int id_game = atoi(response);
 									if (getActualIdGame(username) == getTurnPlayer(id_game)){
+										if (getIteration(id_game) > 2){
+											//FALTA ENVIAR PREGUNTA y respuestas socket
+											//char* getGoodAndSelectedOption(int id_game)
+										}
 										char* points = getPointsGame(id_game);
 										bzero (&socket_com, sizeof (socket_com));
 										sprintf(socket_com, "%s", points);
@@ -328,6 +336,7 @@ int main(){
 										int id_player2 = getRival(id_game, getActualIdGame(username));
 										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
 										changeTurnGame(id_game, id_player2);
+										addIterationGame(id_game);
 									}
 									else
 									{
@@ -381,8 +390,54 @@ int main(){
 			}
 		}
 		close(newSocket);
-	}
-	else{
+	}if(strcmp(buffer_menu, "2") == 0){
+		char* questionsData;
+		questionsData = getAllQuestionsInfo();
+		printf("\n* ** *Preguntas en la base de datos* ** *\n");
+		while((questionsData = strtok(questionsData, "$")) != NULL){
+			printf("%s\n", questionsData);
+			questionsData = NULL;
+		}
+		goto menuServer;
+	}if(strcmp(buffer_menu, "3") == 0){
+		int id_question;
+		printf("\n* ** *Eliminacion de preguntas* ** *\n");
+		printf("\nPor favor introduzca el número de la pregunta que desea eliminar: ");
+		scanf("%d", &id_question);
+		deleteQuestion(id_question);
+		goto menuServer;
+	}if(strcmp(buffer_menu, "4") == 0){
+		char question[512],op1[50],op2[50],op3[50];
+		int value;
+		printf("\n* ** *Insercion de preguntas* ** *\n");
+		printf("Por favor introduzca la pregunta: \n");
+		getchar();
+		scanf("%[^\n]s", question);
+		printf("Por favor introduzca la primer opcion: \n");
+		getchar();
+		scanf("%[^\n]s", op1);
+		printf("Por favor introduzca la segunda opcion: \n");
+		getchar();
+		scanf("%[^\n]s", op2);
+		printf("Por favor introduzca la tercera opcion: \n");
+		getchar();
+		scanf("%[^\n]s", op3);
+		printf("Por favor introduzca el valor de la pregunta: \n");
+		scanf("%d", &value);
+		insertNewQuestion(question,op1,op2,op3,value);
+		goto menuServer;
+	}if(strcmp(buffer_menu, "5") == 0){
+		int id_question, new_value;
+		printf("\n* ** *Actualizar valor de la pregunta* ** *\n");
+		printf("Por favor el numero de la pregunta a modificar: \n");
+		scanf("%d", &id_question);
+		printf("Por favor introduzca : \n");
+		scanf("%d", &new_value);
+		updateValueQuestion(id_question, new_value);
+		goto menuServer;
+	}if(strcmp(buffer_menu, "6") == 0){
+		
+	}else{
 		printf("%s\n", buffer_menu);
 	}
 	return 0;

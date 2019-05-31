@@ -24,7 +24,7 @@ void insertPlayer(int id_game, int id_player1, int id_player2){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-  sprintf(sql, "insert into Game (id_game,id_user,points,turn,level_player) values (%d, %d, 0, %d, 1), (%d, %d, 0, %d, 1);", id_game, id_player1, id_player1, id_game, id_player2, id_player1);
+  sprintf(sql, "insert into Game (id_game,id_user,points,turn,level_player,iteration) values (%d, %d, 0, %d, 1, 1), (%d, %d, 0, %d, 1, 1);", id_game, id_player1, id_player1, id_game, id_player2, id_player1);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
