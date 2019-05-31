@@ -30,27 +30,11 @@
 #include "getValueQuestion.c"
 #include "callback.c"
 #include "dataBase.c"
+#include "titles.c"
 
 int main(){
-
 	char buffer_menu[1024];
-
-	printf("                                                                                     \n");
-	printf("     _______. _______ .______     ____    ____  __   _______   ______   .______  \n");
-	printf("    /       ||   ____||   _  \\    \\   \\  /   / |  | |       \\ /  __  \\  |   _  \\     \n");
-	printf("   |   (----`|  |__   |  |_)  |    \\   \\/   /  |  | |  .--.  |  |  |  | |  |_)  |    \n");
-	printf("    \\   \\    |   __|  |      /      \\      /   |  | |  |  |  |  |  |  | |      /     \n");
-	printf(".----)   |   |  |____ |  |\\  \\----.  \\    /    |  | |  '--'  |  `--'  | |  |\\  \\----.\n");
-	printf("|_______/    |_______|| _| `._____|   \\__/     |__| |_______/ \\______/  | _| `._____|\n");
-	printf("                                                                                     \n");
-	printf(" .___________. __    __   _______    .___________. _______     _______.___________.   \n");
-	printf(" |           ||  |  |  | |   ____|   |           ||   ____|   /       |           |   \n");
-	printf(" `---|  |----`|  |__|  | |  |__      `---|  |----`|  |__     |   (----`---|  |----`   \n");
-	printf("     |  |     |   __   | |   __|         |  |     |   __|     \\   \\       |  |        \n");
-	printf("     |  |     |  |  |  | |  |____        |  |     |  |____.----)   |      |  |        \n");
-	printf("     |__|     |__|  |__| |_______|       |__|     |_______|_______/       |__|        \n");
-	printf("                                                                                     \n");                                                                                     
-	printf("                                                                                     \n");
+	printServerTitle();
 	bzero (&buffer_menu, sizeof (buffer_menu));
 	printf("-+ + -- ++ -- ++ Menu ++ -- ++ -- + -+\n");
 	printf("1. Iniciar el servidor\n");
@@ -62,7 +46,8 @@ int main(){
 	scanf("%s", &buffer_menu[0]);
 
 	if(strcmp(buffer_menu, "1") == 0){
-
+		system("clear");
+		printServerTitle();
 		int sockfd, ret;
 		struct sockaddr_in serverAddr;
 
@@ -80,7 +65,7 @@ int main(){
 			printf("\n[-]Error in connection.\n");
 			exit(1);
 		}
-		printf("\n[+]Server Socket is created.\n");
+		printf("\n[+]Servidor The Test listo para jugar.\n");
 
 		int on=1;
 		setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
@@ -95,20 +80,20 @@ int main(){
 			printf("[-]Error in binding.\n");
 			exit(1);
 		}
-		printf("\[+]Bind to port %d\n", PORT);
+		printf("\[+]Puerto -> %d\n", PORT);
 
 		if(listen(sockfd, 10) == 0){
-			printf("[+]Listening....\n");
+			printf("[+]Esperando....\n");
 		}else{
 			printf("[-]Error in binding.\n");
 		}
 		while(1){
 			newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
 			if(newSocket < 0){
-				printf("Newsocket: %d\n", newSocket);
+				printf("Socket: %d\n", newSocket);
 				exit(1);
 			}
-			printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+			printf("Nueva conexion recibida: %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 
 			if((childpid = fork()) == 0){
 				close(sockfd);

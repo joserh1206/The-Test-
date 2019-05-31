@@ -35,6 +35,8 @@ int getValueQuestion(int id_question);
 int getGoodOption(int id_game, int id_question);
 void setCorrectAnswer(int optionSelected, int id_game, int id_question);
 int getTurnPlayer(int id_game);
+void printClientTitle();
+void printServerTitle();
 sqlite3* openDatabase();
 void closeDatabase(sqlite3* db);
 sqlite3_stmt *stmt;

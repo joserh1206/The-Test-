@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "titles.c"
 
 #define PORT 4442
 //#define IP_ADDR "172.19.127.63"
@@ -46,15 +47,7 @@ int main(){
 		bzero (&buffer, sizeof (buffer));
 		bzero (&buffer2, sizeof (buffer2));
 		bzero (&bufferquestions, sizeof (bufferquestions));
-		printf("                                                                                     \n");
-		printf(" .___________. __    __   _______    .___________. _______     _______.___________.   \n");
-		printf(" |           ||  |  |  | |   ____|   |           ||   ____|   /       |           |   \n");
-		printf(" `---|  |----`|  |__|  | |  |__      `---|  |----`|  |__     |   (----`---|  |----`   \n");
-		printf("     |  |     |   __   | |   __|         |  |     |   __|     \\   \\       |  |        \n");
-		printf("     |  |     |  |  |  | |  |____        |  |     |  |____.----)   |      |  |        \n");
-		printf("     |__|     |__|  |__| |_______|       |__|     |_______|_______/       |__|        \n");
-		printf("                                                                                     \n");                                                                                     
-		printf("                                                                                     \n");
+		printClientTitle();
 		printf("Ingrese su nombre de usuario:\n");
 		scanf("%s", &buffer[0]);
 		
@@ -67,6 +60,7 @@ int main(){
 		send(clientSocket, buffer, strlen(buffer), 0); //Envia el usuario+contrasenia
 
 		bzero (&buffer, sizeof (buffer));
+		system("clear");
 
 		recv(clientSocket, buffer, 1024, 0); //Si existe recibe lista de usuarios disponibles, si no recibe -1
 		if(strcmp(buffer, "-1") == 0){
@@ -90,6 +84,8 @@ int main(){
 			}
 			while (1)
 			{
+				system("clear");
+				printClientTitle();
 				bzero (&buffer, sizeof (buffer));
 				printf("\n* ** * MENU * ** *\n");
 				printf("1. Iniciar una partida nueva\n");
@@ -283,6 +279,8 @@ int main(){
 		else{
 			while (1)
 			{
+				system("clear");
+				printClientTitle();
 				bzero (&buffer, sizeof (buffer));
 				bzero (&user_from_list, sizeof (user_from_list));
 				bzero (&questions, sizeof (questions));
