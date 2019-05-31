@@ -36,6 +36,8 @@ int main(){
 	printf("[+]Connected to Server.\n");
 
 	while(1){
+		
+		system("clear");
 		const char separator[2] = "$";
 		char buffer[1024];
 		char buffer2[1024];
@@ -44,6 +46,15 @@ int main(){
 		bzero (&buffer, sizeof (buffer));
 		bzero (&buffer2, sizeof (buffer2));
 		bzero (&bufferquestions, sizeof (bufferquestions));
+		printf("                                                                                     \n");
+		printf(" .___________. __    __   _______    .___________. _______     _______.___________.   \n");
+		printf(" |           ||  |  |  | |   ____|   |           ||   ____|   /       |           |   \n");
+		printf(" `---|  |----`|  |__|  | |  |__      `---|  |----`|  |__     |   (----`---|  |----`   \n");
+		printf("     |  |     |   __   | |   __|         |  |     |   __|     \\   \\       |  |        \n");
+		printf("     |  |     |  |  |  | |  |____        |  |     |  |____.----)   |      |  |        \n");
+		printf("     |__|     |__|  |__| |_______|       |__|     |_______|_______/       |__|        \n");
+		printf("                                                                                     \n");                                                                                     
+		printf("                                                                                     \n");
 		printf("Ingrese su nombre de usuario:\n");
 		scanf("%s", &buffer[0]);
 		
@@ -59,21 +70,22 @@ int main(){
 
 		recv(clientSocket, buffer, 1024, 0); //Si existe recibe lista de usuarios disponibles, si no recibe -1
 		if(strcmp(buffer, "-1") == 0){
-			printf("El usuario ingresado no se encuentra en la BD, desea agregarlo? (S/N):\n");
+			printf("\nEl usuario ingresado no se encuentra en la BD, desea agregarlo? (S/N):\n");
 			scanf("%s", &buffer[0]);
 			send(clientSocket, buffer, strlen(buffer), 0); //Envia respuesta al servidor
 			if(strcmp(buffer, "N") == 0 || strcmp(buffer, "n") == 0){
-				printf("Está bien, sin rencores...\n");
+				printf("\nEstá bien, sin rencores...\n");
 				sprintf(buffer, "#");
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
+				sleep(1);
 				continue;
 			}
 			bzero (&buffer, sizeof (buffer));
 			recv(clientSocket, buffer, 1024, 0);
 			if(strcmp(buffer, "Ok") == 0){
-				printf("Usuario registrado, BIENVENIDO\n");
+				printf("\n -+- Usuario registrado, BIENVENIDO -+- \n");
 			}else{
-				printf("Ha ocurrido un problema inesperado. Intentelo de nuevo\n");
+				printf("\nHa ocurrido un problema inesperado. Intentelo de nuevo\n");
 				continue;
 			}
 			while (1)
@@ -92,7 +104,17 @@ int main(){
 				}
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia el numero de la opción
 				if(strcmp(buffer, "4") == 0){
-					printf("Saliendo . . .\n");
+					printf("Saliendo");
+					fflush(stdout);
+					sleep(0.5);
+					printf(" .");
+					fflush(stdout);
+					sleep(1);
+					printf(" .");
+					fflush(stdout);
+					sleep(1);
+					printf(" .");
+					fflush(stdout);
 					break;
 				}
 				if(strcmp(buffer, "1") == 0){
@@ -279,7 +301,18 @@ int main(){
 				}
 				send(clientSocket, buffer, strlen(buffer), 0); //Envia el numero de la opción
 				if(strcmp(buffer, "4") == 0){
-					printf("Saliendo . . .\n");
+					printf("Saliendo");
+					fflush(stdout);
+					sleep(0.5);
+					printf(" .");
+					fflush(stdout);
+					sleep(1);
+					printf(" .");
+					fflush(stdout);
+					sleep(1);
+					printf(" .");
+					fflush(stdout);	
+					sleep(1);
 					break;
 				}
 				if(strcmp(buffer, "1") == 0){

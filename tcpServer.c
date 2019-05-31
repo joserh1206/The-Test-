@@ -33,236 +33,137 @@
 
 int main(){
 
-	int sockfd, ret;
-	struct sockaddr_in serverAddr;
+	char buffer_menu[1024];
 
-	int newSocket;
-	struct sockaddr_in newAddr;
+	printf("                                                                                     \n");
+	printf("     _______. _______ .______     ____    ____  __   _______   ______   .______  \n");
+	printf("    /       ||   ____||   _  \\    \\   \\  /   / |  | |       \\ /  __  \\  |   _  \\     \n");
+	printf("   |   (----`|  |__   |  |_)  |    \\   \\/   /  |  | |  .--.  |  |  |  | |  |_)  |    \n");
+	printf("    \\   \\    |   __|  |      /      \\      /   |  | |  |  |  |  |  |  | |      /     \n");
+	printf(".----)   |   |  |____ |  |\\  \\----.  \\    /    |  | |  '--'  |  `--'  | |  |\\  \\----.\n");
+	printf("|_______/    |_______|| _| `._____|   \\__/     |__| |_______/ \\______/  | _| `._____|\n");
+	printf("                                                                                     \n");
+	printf(" .___________. __    __   _______    .___________. _______     _______.___________.   \n");
+	printf(" |           ||  |  |  | |   ____|   |           ||   ____|   /       |           |   \n");
+	printf(" `---|  |----`|  |__|  | |  |__      `---|  |----`|  |__     |   (----`---|  |----`   \n");
+	printf("     |  |     |   __   | |   __|         |  |     |   __|     \\   \\       |  |        \n");
+	printf("     |  |     |  |  |  | |  |____        |  |     |  |____.----)   |      |  |        \n");
+	printf("     |__|     |__|  |__| |_______|       |__|     |_______|_______/       |__|        \n");
+	printf("                                                                                     \n");                                                                                     
+	printf("                                                                                     \n");
+	bzero (&buffer_menu, sizeof (buffer_menu));
+	printf("-+ + -- ++ -- ++ Menu ++ -- ++ -- + -+\n");
+	printf("1. Iniciar el servidor\n");
+	printf("2. Eliminar preguntas\n");
+	printf("3. Agregar preguntas\n");
+	printf("4. Modificar valores de preguntas\n");
+	printf("5. Ver estadísticas\n");
+	printf("Seleccione una opción: ");
+	scanf("%s", &buffer_menu[0]);
 
-	socklen_t addr_size;
+	if(strcmp(buffer_menu, "1") == 0){
 
-	pid_t childpid;
+		int sockfd, ret;
+		struct sockaddr_in serverAddr;
 
-	addr_size = sizeof(struct sockaddr_in);
+		int newSocket;
+		struct sockaddr_in newAddr;
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd < 0){
-		printf("[-]Error in connection.\n");
-		exit(1);
-	}
-	printf("[+]Server Socket is created.\n");
+		socklen_t addr_size;
 
-	int on=1;
-  	setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+		pid_t childpid;
 
-	memset(&serverAddr, '\0', sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(PORT);
-	serverAddr.sin_addr.s_addr = inet_addr(IP_ADDR);
+		addr_size = sizeof(struct sockaddr_in);
 
-	ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-	if(ret < 0){
-		printf("[-]Error in binding.\n");
-		exit(1);
-	}
-	printf("[+]Bind to port %d\n", PORT);
-
-	if(listen(sockfd, 10) == 0){
-		printf("[+]Listening....\n");
-	}else{
-		printf("[-]Error in binding.\n");
-	}
-	while(1){
-		newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
-		if(newSocket < 0){
-			printf("Newsocket: %d\n", newSocket);
+		sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if(sockfd < 0){
+			printf("\n[-]Error in connection.\n");
 			exit(1);
 		}
-		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+		printf("\n[+]Server Socket is created.\n");
 
-		if((childpid = fork()) == 0){
-			close(sockfd);
-			char *user_id;
-			while(1){
-				const char separator[2] = "$";
-				char buffer[1024];
-				char *word, *type, *username, *password, *buffer2, *answers;
-				char response[4], socket_com[1024];
-				int check = 0;
-				new_game:
-				bzero (&username, sizeof (username));
-				bzero (&password, sizeof (password));
-				bzero (&buffer, sizeof (buffer));
+		int on=1;
+		setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
 
-				recv(newSocket, buffer, 1024, 0); //Recibe usuario+contrasenia
-				username = strtok(buffer, separator);
-				password = strtok(NULL, separator);
-				check = checkUsernamePassword(username, password);
+		memset(&serverAddr, '\0', sizeof(serverAddr));
+		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_port = htons(PORT);
+		serverAddr.sin_addr.s_addr = inet_addr(IP_ADDR);
 
-				if(check){
-					sprintf(response, "1");
-					send(newSocket, response, strlen(response), 0); //Envia verificacion al cliente
-					
-					ciclo:
-					bzero (&response, sizeof (response));
-					recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-					if(strcmp(response, "1") == 0){
-						bzero(&socket_com, sizeof(socket_com));
-						printf("El usuario eligió 1\n");
-						if (getNewIdGame() == 0){
-							buffer2 = getPlayersToGame2(username);
-						}
-						else{
-							buffer2 = getPlayersToGame(username);
-						}
-						sprintf(socket_com, "%s", buffer2);
-						send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+		ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+		if(ret < 0){
+			printf("[-]Error in binding.\n");
+			exit(1);
+		}
+		printf("\[+]Bind to port %d\n", PORT);
+
+		if(listen(sockfd, 10) == 0){
+			printf("[+]Listening....\n");
+		}else{
+			printf("[-]Error in binding.\n");
+		}
+		while(1){
+			newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
+			if(newSocket < 0){
+				printf("Newsocket: %d\n", newSocket);
+				exit(1);
+			}
+			printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+
+			if((childpid = fork()) == 0){
+				close(sockfd);
+				char *user_id;
+				while(1){
+					const char separator[2] = "$";
+					char buffer[1024];
+					char *word, *type, *username, *password, *buffer2, *answers;
+					char response[4], socket_com[1024];
+					int check = 0;
+					new_game:
+					bzero (&username, sizeof (username));
+					bzero (&password, sizeof (password));
+					bzero (&buffer, sizeof (buffer));
+
+					recv(newSocket, buffer, 1024, 0); //Recibe usuario+contrasenia
+					username = strtok(buffer, separator);
+					password = strtok(NULL, separator);
+					check = checkUsernamePassword(username, password);
+
+					if(check){
+						sprintf(response, "1");
+						send(newSocket, response, strlen(response), 0); //Envia verificacion al cliente
+						
+						ciclo:
 						bzero (&response, sizeof (response));
-						recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
-						int id_player2 = atoi(response);
-						int id_game = makeGame(response, username);
-						createStatistics(getActualIdGame(username),id_game);
-						createStatistics(id_player2,id_game);
-						while(1){
-							bzero (&response, sizeof (response));
+						recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+						if(strcmp(response, "1") == 0){
 							bzero(&socket_com, sizeof(socket_com));
-							getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
-							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
-							if(strcmp(response, "#") == 0){
-								goto ciclo;
-							}	
-						}
-					}
-						if(strcmp(response, "2") == 0){
-							bzero(&socket_com, sizeof(socket_com));
-							printf("El usuario eligio 2\n");
-							char* players = getGamesInProcess(username);
-							sprintf(socket_com, "%s", players);
+							printf("El usuario eligió 1\n");
+							if (getNewIdGame() == 0){
+								buffer2 = getPlayersToGame2(username);
+							}
+							else{
+								buffer2 = getPlayersToGame(username);
+							}
+							sprintf(socket_com, "%s", buffer2);
 							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Recibe numero del juego para continuar la partida
-							int id_game = atoi(response);
-							if (getActualIdGame(username) == getTurnPlayer(id_game)){
-								char* points = getPointsGame(id_game);
-								bzero (&socket_com, sizeof (socket_com));
-								sprintf(socket_com, "%s", points);
-								char* questions = getTwoQuestionsLastPLayer(id_game);
-								char* data;
-								char response2[4];
-								send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
-								bzero(&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); 
-								send(newSocket, questions, strlen(questions), 0); //Envia la preguntas
-								bzero(&response2, sizeof (response2));
-								recv(newSocket, response2, 1024, 0); //Recibe pregunta 1
-								printf("\nPregunta 1 -> %s\n", response2);
-								data = getQuestionData(atoi(response2));
-								send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
-								bzero(&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 1
-								bzero (&socket_com, sizeof (socket_com));
-								sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
-								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
-								//********************************************************************************
-								bzero(&response2, sizeof (response2));
-								bzero(&response, sizeof (response));
-								recv(newSocket, response2, 1024, 0); //Recibe pregunta 2
-								printf("\nPregunta 2 -> %s\n", response2);
-								data = getQuestionData(atoi(response2));
-								send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
-								bzero(&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Recibe respuesta de la 2
-								printf("\nRespuesta 2 -> %s\n", response);
-								bzero (&socket_com, sizeof (socket_com));
-								sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
-								send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
-								bzero(&response, sizeof (response));
-								bzero(&socket_com, strlen(socket_com));
-								recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
-								int id_player2 = getRival(id_game, getActualIdGame(username));
+							recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+							int id_player2 = atoi(response);
+							int id_game = makeGame(response, username);
+							createStatistics(getActualIdGame(username),id_game);
+							createStatistics(id_player2,id_game);
+							while(1){
+								bzero (&response, sizeof (response));
+								bzero(&socket_com, sizeof(socket_com));
 								getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
-								changeTurnGame(id_game, id_player2);
-							}else{
-								char* mensaje = "-1";
-								bzero (&socket_com, sizeof (socket_com));
-								sprintf(socket_com, "%s", mensaje);
-								send(newSocket, socket_com, strlen(socket_com), 0); //Envia codigo de error
-								bzero(&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); 
+								bzero (&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
 								if(strcmp(response, "#") == 0){
 									goto ciclo;
 								}	
 							}
-							bzero(&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); 
-							if(strcmp(response, "#") == 0){
-								goto ciclo;
-							}	
 						}
-						if(strcmp(response, "3") == 0){
-							bzero(&socket_com, sizeof(socket_com));
-							printf("El usuario eligio 3\n");
-							bzero(&response, sizeof (response));
-							int id_player = getActualIdGame(username);
-							char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
-							bzero (&socket_com, sizeof (socket_com));
-							sprintf(socket_com, "%s", statistics);
-							send(newSocket, socket_com, strlen(socket_com), 0);
-							recv(newSocket, response, 1024, 0); 
-							if(strcmp(response, "#") == 0){
-								goto ciclo;
-							}	
-						}
-						if(strcmp(response, "4") == 0){
-							//estadisticas();
-							printf("El usuario %s cerró la sesión\n", username);
-							goto new_game;
-						}
-					}
-				else
-				{
-					printf("El usuario no existe\n");
-					sprintf(response, "-1");
-					send(newSocket, response, strlen(response), 0); //Pregunta si ingresarlo a la BD
-					bzero (&response, sizeof (response));
-					recv(newSocket, response, 1024, 0); //Recibe respuesta usuario respecto a BD
-					if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
-						check = insertPlayerIntoDB(username, password);
-						if (check){
-							bzero (&response, sizeof (response));
-							sprintf(response, "Ok");
-							send(newSocket, response, strlen(response), 0);
-							ciclo2:
-							bzero (&response, sizeof (response));
-							recv(newSocket, response, 1024, 0); //Espera por opcion del menu
-							if(strcmp(response, "1") == 0){
-								printf("El usuario eligió 1\n");
-								if (getNewIdGame() == 0){
-									buffer2 = getPlayersToGame2(username);
-								}
-								else{
-									buffer2 = getPlayersToGame(username);
-								}
-								sprintf(socket_com, "%s", buffer2);
-								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
-								bzero (&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
-								int id_player2 = atoi(response);
-								int id_game = makeGame(response, username);
-								createStatistics(getActualIdGame(username),id_game);
-								createStatistics(id_player2,id_game);
-								while(1){
-									bzero(&response, sizeof (response));
-									bzero(&socket_com, sizeof(socket_com));
-									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
-									bzero(&response, sizeof (response));
-									recv(newSocket, response, 1024, 0); 
-									if(strcmp(response, "#") == 0){
-										goto ciclo2;
-									}	
-								}
-							}
 							if(strcmp(response, "2") == 0){
 								bzero(&socket_com, sizeof(socket_com));
 								printf("El usuario eligio 2\n");
@@ -279,7 +180,6 @@ int main(){
 									char* questions = getTwoQuestionsLastPLayer(id_game);
 									char* data;
 									char response2[4];
-									//sprintf("Ultimas dos preguntas: %s\n", questions);
 									send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
 									bzero(&response, sizeof (response));
 									recv(newSocket, response, 1024, 0); 
@@ -313,9 +213,7 @@ int main(){
 									int id_player2 = getRival(id_game, getActualIdGame(username));
 									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
 									changeTurnGame(id_game, id_player2);
-								}
-								else
-								{
+								}else{
 									char* mensaje = "-1";
 									bzero (&socket_com, sizeof (socket_com));
 									sprintf(socket_com, "%s", mensaje);
@@ -333,38 +231,174 @@ int main(){
 								}	
 							}
 							if(strcmp(response, "3") == 0){
+								bzero(&socket_com, sizeof(socket_com));
 								printf("El usuario eligio 3\n");
-								bzero (&response, sizeof (response));
+								bzero(&response, sizeof (response));
 								int id_player = getActualIdGame(username);
-								//char* statistics = getRightAndWrongPlayer(id_player);
 								char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
 								bzero (&socket_com, sizeof (socket_com));
 								sprintf(socket_com, "%s", statistics);
 								send(newSocket, socket_com, strlen(socket_com), 0);
 								recv(newSocket, response, 1024, 0); 
 								if(strcmp(response, "#") == 0){
-									goto ciclo2;
+									goto ciclo;
 								}	
 							}
 							if(strcmp(response, "4") == 0){
+								//estadisticas();
 								printf("El usuario %s cerró la sesión\n", username);
 								goto new_game;
 							}
 						}
-					}
-					else{
-						printf("No quiere ingresarlo a la base\n");
+					else
+					{
+						printf("El usuario no existe\n");
+						sprintf(response, "-1");
+						send(newSocket, response, strlen(response), 0); //Pregunta si ingresarlo a la BD
 						bzero (&response, sizeof (response));
-						recv(newSocket, response, 1024, 0);
-						if(strcmp(response, "#") == 0){
-							goto new_game;
-						}	
+						recv(newSocket, response, 1024, 0); //Recibe respuesta usuario respecto a BD
+						if(strcmp(response, "S") == 0 || strcmp(response, "s") == 0){
+							check = insertPlayerIntoDB(username, password);
+							if (check){
+								bzero (&response, sizeof (response));
+								sprintf(response, "Ok");
+								send(newSocket, response, strlen(response), 0);
+								ciclo2:
+								bzero (&response, sizeof (response));
+								recv(newSocket, response, 1024, 0); //Espera por opcion del menu
+								if(strcmp(response, "1") == 0){
+									printf("El usuario eligió 1\n");
+									if (getNewIdGame() == 0){
+										buffer2 = getPlayersToGame2(username);
+									}
+									else{
+										buffer2 = getPlayersToGame(username);
+									}
+									sprintf(socket_com, "%s", buffer2);
+									send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+									bzero (&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); //Recibe numero del usuario para una nueva partida
+									int id_player2 = atoi(response);
+									int id_game = makeGame(response, username);
+									createStatistics(getActualIdGame(username),id_game);
+									createStatistics(id_player2,id_game);
+									while(1){
+										bzero(&response, sizeof (response));
+										bzero(&socket_com, sizeof(socket_com));
+										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+										bzero(&response, sizeof (response));
+										recv(newSocket, response, 1024, 0); 
+										if(strcmp(response, "#") == 0){
+											goto ciclo2;
+										}	
+									}
+								}
+								if(strcmp(response, "2") == 0){
+									bzero(&socket_com, sizeof(socket_com));
+									printf("El usuario eligio 2\n");
+									char* players = getGamesInProcess(username);
+									sprintf(socket_com, "%s", players);
+									send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
+									bzero (&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); //Recibe numero del juego para continuar la partida
+									int id_game = atoi(response);
+									if (getActualIdGame(username) == getTurnPlayer(id_game)){
+										char* points = getPointsGame(id_game);
+										bzero (&socket_com, sizeof (socket_com));
+										sprintf(socket_com, "%s", points);
+										char* questions = getTwoQuestionsLastPLayer(id_game);
+										char* data;
+										char response2[4];
+										//sprintf("Ultimas dos preguntas: %s\n", questions);
+										send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
+										bzero(&response, sizeof (response));
+										recv(newSocket, response, 1024, 0); 
+										send(newSocket, questions, strlen(questions), 0); //Envia la preguntas
+										bzero(&response2, sizeof (response2));
+										recv(newSocket, response2, 1024, 0); //Recibe pregunta 1
+										printf("\nPregunta 1 -> %s\n", response2);
+										data = getQuestionData(atoi(response2));
+										send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
+										bzero(&response, sizeof (response));
+										recv(newSocket, response, 1024, 0); //Recibe respuesta de la 1
+										bzero (&socket_com, sizeof (socket_com));
+										sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
+										send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
+										//********************************************************************************
+										bzero(&response2, sizeof (response2));
+										bzero(&response, sizeof (response));
+										recv(newSocket, response2, 1024, 0); //Recibe pregunta 2
+										printf("\nPregunta 2 -> %s\n", response2);
+										data = getQuestionData(atoi(response2));
+										send(newSocket, data, strlen(data), 0); //Envia la data de la pregunta
+										bzero(&response, sizeof (response));
+										recv(newSocket, response, 1024, 0); //Recibe respuesta de la 2
+										printf("\nRespuesta 2 -> %s\n", response);
+										bzero (&socket_com, sizeof (socket_com));
+										sprintf(socket_com, "%s", checkAnswer(id_game, atoi(response2), atoi(response), username));
+										send(newSocket, socket_com, strlen(socket_com), 0);//Envia acuse de recibido
+										bzero(&response, sizeof (response));
+										bzero(&socket_com, strlen(socket_com));
+										recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
+										int id_player2 = getRival(id_game, getActualIdGame(username));
+										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+										changeTurnGame(id_game, id_player2);
+									}
+									else
+									{
+										char* mensaje = "-1";
+										bzero (&socket_com, sizeof (socket_com));
+										sprintf(socket_com, "%s", mensaje);
+										send(newSocket, socket_com, strlen(socket_com), 0); //Envia codigo de error
+										bzero(&response, sizeof (response));
+										recv(newSocket, response, 1024, 0); 
+										if(strcmp(response, "#") == 0){
+											goto ciclo;
+										}	
+									}
+									bzero(&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); 
+									if(strcmp(response, "#") == 0){
+										goto ciclo;
+									}	
+								}
+								if(strcmp(response, "3") == 0){
+									printf("El usuario eligio 3\n");
+									bzero (&response, sizeof (response));
+									int id_player = getActualIdGame(username);
+									//char* statistics = getRightAndWrongPlayer(id_player);
+									char* statistics = getAllGamesAndStatisticsForPlayer(id_player);
+									bzero (&socket_com, sizeof (socket_com));
+									sprintf(socket_com, "%s", statistics);
+									send(newSocket, socket_com, strlen(socket_com), 0);
+									recv(newSocket, response, 1024, 0); 
+									if(strcmp(response, "#") == 0){
+										goto ciclo2;
+									}	
+								}
+								if(strcmp(response, "4") == 0){
+									printf("El usuario %s cerró la sesión\n", username);
+									goto new_game;
+								}
+							}
+						}
+						else{
+							printf("No quiere ingresarlo a la base\n");
+							bzero (&response, sizeof (response));
+							recv(newSocket, response, 1024, 0);
+							if(strcmp(response, "#") == 0){
+								goto new_game;
+							}	
+						}
 					}
+					bzero(&buffer, sizeof(buffer));
 				}
-				bzero(&buffer, sizeof(buffer));
 			}
 		}
+		close(newSocket);
 	}
-	close(newSocket);
+	else{
+		printf("%s\n", buffer_menu);
+	}
 	return 0;
 }
