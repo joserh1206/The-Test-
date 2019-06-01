@@ -361,6 +361,7 @@ int main(){
 					user_from_list = buffer;
 					if(strcmp(user_from_list, "-1") == 0){
 						printf("\n* ** * No tiene partidas activas actualmente * ** *\n");
+						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
@@ -382,7 +383,7 @@ int main(){
 						bzero (&buffer, sizeof (buffer));
 						printf("\nLo lamento, no esta en su turno, por favor espere...\n");
 						sprintf(buffer, "#");
-						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia mensaje especial
 						continue;
 					}
 					else{
@@ -390,6 +391,21 @@ int main(){
 							printf("%s\n", puntos);
 							puntos = NULL;
 						}
+						sprintf(buffer, "&");
+						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
+						char* answ_p2;
+						bzero (&buffer, sizeof (buffer));
+						recv(clientSocket, buffer, 1024, 0); //Recibe preguntas resueltas por jugador oponente
+						answ_p2 = buffer;
+						if(strcmp(buffer, "&") != 0){
+							printf("\n** * ** *** Respuestas del oponente *** ** * **\n");
+							while((answ_p2 = strtok(answ_p2, separator)) != NULL){
+								printf("\n%s\n", answ_p2);
+								answ_p2 = NULL;
+							}
+							printf("\n** * ** *** **** ***** **** *** ** * **\n");
+						}
+						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "&");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia acuse de recibido
 						bzero (&buffer, sizeof (buffer));

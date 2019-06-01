@@ -88,7 +88,7 @@ char* getGoodAndSelectedOption(int id_game)
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql, "select Questions.question, QuestionsPerGame.good_option, QuestionsPerGame.selected_option from QuestionsPerGame inner join Questions on QuestionsPerGame.id_question and Questions.Id_question where QuestionsPerGame.id_question in (select QuestionsPerGame.id_question from QuestionsPerGame where QuestionsPerGame.id_game = %d limit 2 offset (select count(*) from QuestionsPerGame where QuestionsPerGame.id_game = %d)-4);", id_game,id_game);
+	sprintf(sql, "select Questions.question, QuestionsPerGame.good_option, QuestionsPerGame.selected_option from QuestionsPerGame inner join Questions on QuestionsPerGame.id_question = Questions.Id_question where QuestionsPerGame.id_question in (select QuestionsPerGame.id_question from QuestionsPerGame where QuestionsPerGame.id_game = %d limit 2 offset (select count(*) from QuestionsPerGame where QuestionsPerGame.id_game = %d)-4) limit 2 offset 1;", id_game,id_game);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)

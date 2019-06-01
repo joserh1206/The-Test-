@@ -105,7 +105,7 @@ int main(){
 					const char separator[2] = "$";
 					char buffer[1024];
 					char *word, *type, *username, *password, *buffer2, *answers;
-					char response[4], socket_com[1024];
+					char response[4], socket_com[4096];
 					int check = 0;
 					new_game:
 					bzero (&username, sizeof (username));
@@ -127,7 +127,7 @@ int main(){
 						if(strcmp(response, "1") == 0){
 							bzero(&socket_com, sizeof(socket_com));
 							printf("El usuario eligió 1\n");
-							if (getNewIdGame() == 0){
+							if (getNewIdGame() == 0){ //Sale el nombre del jugador que inició la partidad (Puede jugar con el mismo)
 								buffer2 = getPlayersToGame2(username);
 							}
 							else{
@@ -160,18 +160,39 @@ int main(){
 								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 								bzero (&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); //Recibe numero del juego para continuar la partida
+								if(strcmp(response, "#") == 0){
+									goto ciclo;
+								}	
 								int id_game = atoi(response);
 								if (getActualIdGame(username) == getTurnPlayer(id_game)){
 									char* points = getPointsGame(id_game);
 									bzero (&socket_com, sizeof (socket_com));
 									sprintf(socket_com, "%s", points);
-									char* questions = getTwoQuestionsLastPLayer(id_game);
 									char* data;
 									char response2[4];
-									send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos								
+									send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
 									bzero(&response, sizeof (response));
 									recv(newSocket, response, 1024, 0); 
-									send(newSocket, questions, strlen(questions), 0); //Envia la preguntas
+									if (getIteration(id_game) > 2){
+										//FALTA ENVIAR PREGUNTA y respuestas socket
+										bzero(&socket_com, sizeof(socket_com));
+										char* answ_p2 = getGoodAndSelectedOption(id_game);
+										sprintf(socket_com, "%s", answ_p2);
+										send(newSocket, socket_com, strlen(socket_com), 0); //Preguntas resueltas por el jugador oponente
+										//bzero (&socket_com, sizeof (socket_com));
+									}
+									else{
+										bzero(&socket_com, sizeof(socket_com));
+										sprintf(socket_com, "&");
+										send(newSocket, socket_com, strlen(socket_com), 0); //Si no está en un turno mayor a 2, envía caracter especial
+										//bzero (&socket_com, sizeof (socket_com));
+									}
+									bzero (&socket_com, sizeof (socket_com));
+									recv(newSocket, response, 1024, 0); 
+									printf("\nResponse Server -> %s\n", response);
+									char* questions = getTwoQuestionsLastPLayer(id_game);
+									sprintf(socket_com, "%s", questions);
+									send(newSocket, socket_com, strlen(questions), 0); //Envia la preguntas
 									bzero(&response2, sizeof (response2));
 									recv(newSocket, response2, 1024, 0); //Recibe pregunta 1
 									printf("\nPregunta 1 -> %s\n", response2);
@@ -294,7 +315,15 @@ int main(){
 									if (getActualIdGame(username) == getTurnPlayer(id_game)){
 										if (getIteration(id_game) > 2){
 											//FALTA ENVIAR PREGUNTA y respuestas socket
-											//char* getGoodAndSelectedOption(int id_game)
+											bzero(&socket_com, sizeof(socket_com));
+											char* answ_p2 = getGoodAndSelectedOption(id_game);											
+											sprintf(socket_com, "%s", answ_p2);
+											send(newSocket, socket_com, strlen(socket_com), 0); //Preguntas resueltas por el jugador oponente
+										}
+										else{
+											bzero(&socket_com, sizeof(socket_com));
+											sprintf(socket_com, "&");
+											send(newSocket, socket_com, strlen(socket_com), 0); //Si no está en un turno mayor a 2, envía caracter especial
 										}
 										char* points = getPointsGame(id_game);
 										bzero (&socket_com, sizeof (socket_com));

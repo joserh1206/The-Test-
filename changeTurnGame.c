@@ -57,7 +57,7 @@ int getIteration(int id_game)
 			iteration = sqlite3_column_int(stmt,0);
 		}
   }
-	
+	printf("Iteration -> %d\n", iteration);
   closeDatabase(db);
 	return(iteration);
 }
