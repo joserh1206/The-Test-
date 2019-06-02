@@ -121,7 +121,7 @@ int main(){
 					bzero (&bufferquestions, sizeof (bufferquestions));
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores disponibles o un codigo de error
 					user_from_list = buffer;
-					printf("\n* *** * Jugadores * *** *\n");
+					printf("\n*-* - *-+-* - *-* Lista de jugadores *-* - *-+-* - *-*\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -167,6 +167,8 @@ int main(){
 					user_from_list = buffer;
 					if(strcmp(user_from_list, "-1") == 0){
 						printf("\n* ** * No tiene partidas activas actualmente * ** *\n");
+						fflush(stdout);
+						sleep(2);
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
 						continue;
@@ -258,6 +260,8 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
 					if(strcmp(buffer, "$") == 0){
 						printf("\n* ** * Primero debe jugar una partida :) * ** *\n");
+						fflush(stdout);
+						sleep(2);
 						bzero(&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor						
@@ -268,7 +272,10 @@ int main(){
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
-					}
+					}					
+					printf("Presione cualquier tecla para continuar. . .\n");
+					getchar();
+					getchar();
 					bzero (&buffer, sizeof (buffer));
 					sprintf(buffer, "#");
 					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
@@ -317,6 +324,7 @@ int main(){
 					bzero (&buffer, sizeof (buffer));
 					recv(clientSocket, buffer, 1024, 0); //Recibe lista jugadores disponibles
 					user_from_list = buffer;
+					printf("\n*-* - *-+-* - *-* Lista de jugadores *-* - *-+-* - *-*\n");
 					while((user_from_list = strtok(user_from_list, separator)) != NULL){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
@@ -361,6 +369,8 @@ int main(){
 					user_from_list = buffer;
 					if(strcmp(user_from_list, "-1") == 0){
 						printf("\n* ** * No tiene partidas activas actualmente * ** *\n");
+						fflush(stdout);
+						sleep(2);
 						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor
@@ -468,6 +478,8 @@ int main(){
 					recv(clientSocket, buffer, 1024, 0); //Recibe las estadisticas
 					if(strcmp(buffer, "$") == 0){
 						printf("\n* ** * Primero debe jugar una partida :) * ** *\n");
+						fflush(stdout);
+						sleep(2);
 						bzero (&buffer, sizeof (buffer));
 						sprintf(buffer, "#");
 						send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor						
@@ -479,6 +491,9 @@ int main(){
 						printf("%s\n", user_from_list);
 						user_from_list = NULL;
 					}
+					printf("Presione cualquier tecla para continuar. . .\n");					
+					getchar();
+					getchar();
 					bzero (&buffer, sizeof (buffer));
 					sprintf(buffer, "#");
 					send(clientSocket, buffer, strlen(buffer), 0); //Envia las respuestas al servidor

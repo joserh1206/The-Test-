@@ -35,7 +35,7 @@ char* getPlayersToGame2(char *username)
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql,"select * from Users where not Users.username = '%s'", username);
+	sprintf(sql,"select * from Users where Users.username != '%s'", username);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)
