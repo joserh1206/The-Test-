@@ -9,8 +9,8 @@
 #include "titles.c"
 
 #define PORT 4442
-//#define IP_ADDR "172.19.127.63"
-#define IP_ADDR "127.0.0.1"
+#define IP_ADDR "172.19.127.63"
+//#define IP_ADDR "127.0.0.1"
 
 int main(){
 
