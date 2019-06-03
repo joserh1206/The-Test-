@@ -1,6 +1,7 @@
 #define PORT 4442
 #define IP_ADDR "172.19.127.63"
 //#define IP_ADDR "127.0.0.1"
+int getGamesPlayers(int id_player);
 int getRival(int game, int actual);
 char* checkAnswer(int id_game, int response2, int response, char* username);
 void getNewQuestions(int id_game, char socket_com[1024], int newSocket, char response[4], char* answers, int id_player2, int id_player1);
@@ -16,8 +17,7 @@ char* getTwoQuestionsLastPLayer(int game);
 char* getAllGamesAndStatisticsForPlayer(int player);
 char* getRightAndWrongPlayer(int player);
 int getCorrectAnswer(int game, int question);
-char* getPlayersToGame(char *username);
-char* getPlayersToGame2(char *username);
+char* getPlayersToGame(int id_player);
 char* getGamesInProcess(char* username);
 char* getPointsGame(int id_game);
 void deleteQuestion(int id_q);

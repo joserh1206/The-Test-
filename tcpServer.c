@@ -126,13 +126,8 @@ int main(){
 						recv(newSocket, response, 1024, 0); //Espera por opcion del menu
 						if(strcmp(response, "1") == 0){
 							bzero(&socket_com, sizeof(socket_com));
-							printf("El usuario eligió 1\n");
-							if (getNewIdGame() == 0){ //Sale el nombre del jugador que inició la partidad (Puede jugar con el mismo)
-								buffer2 = getPlayersToGame2(username);
-							}
-							else{
-								buffer2 = getPlayersToGame(username);
-							}
+							printf("El usuario eligió 1...\n");
+							buffer2 = getPlayersToGame(getActualIdGame(username));
 							sprintf(socket_com, "%s", buffer2);
 							send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 							bzero (&response, sizeof (response));
@@ -281,13 +276,8 @@ int main(){
 								bzero (&response, sizeof (response));
 								recv(newSocket, response, 1024, 0); //Espera por opcion del menu
 								if(strcmp(response, "1") == 0){
-									printf("El usuario eligió 1\n");
-									if (getNewIdGame() == 0){
-										buffer2 = getPlayersToGame2(username);
-									}
-									else{
-										buffer2 = getPlayersToGame(username);
-									}
+									printf("El usuario eligió 1...\n");
+									buffer2 = getPlayersToGame(getActualIdGame(username));
 									sprintf(socket_com, "%s", buffer2);
 									send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 									bzero (&response, sizeof (response));
