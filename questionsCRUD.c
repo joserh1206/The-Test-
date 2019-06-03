@@ -98,3 +98,37 @@ void deleteQuestion(int id_q){
     closeDatabase(db);
 }
 
+//muestra la preguntas de manera descenedente por # de usos
+char* getRankingQuestions(){
+    sqlite3 *db = openDatabase();
+    char sql[1024], out[4096];
+    char *buffer;
+    int rc;
+    sprintf(sql, "select Questions.question, Questions.correct, Questions.incorrect, (Questions.correct+Questions.incorrect) from Questions order by (Questions.correct+Questions.incorrect) desc;");
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed get questions: %s\n", sqlite3_errmsg(db));
+        closeDatabase(db);
+    }else
+    {
+        bzero(&out, sizeof(out));
+        bzero(&buffer, sizeof(buffer));
+        sprintf(out, "$");
+
+        while(sqlite3_step(stmt) != SQLITE_DONE){
+            strcat(out, "\nPregunta:\n");
+            strcat(out, sqlite3_column_text(stmt,0));
+            strcat(out, "\n# Aciertos:");
+            strcat(out, sqlite3_column_text(stmt,1));
+            strcat(out, "\n# Fallos:");
+            strcat(out, sqlite3_column_text(stmt,2));
+            strcat(out, "\n# de usos:");
+            strcat(out, sqlite3_column_text(stmt,3));
+            strcat(out, "$");
+        }
+    }
+    buffer = out;
+    closeDatabase(db);
+    return buffer;
+}
