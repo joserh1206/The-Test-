@@ -141,21 +141,23 @@ int main(){
 							int id_game = makeGame(response, username);
 							createStatistics(getActualIdGame(username),id_game);
 							createStatistics(id_player2,id_game);
-							while(1){
-								bzero (&response, sizeof (response));
-								bzero(&socket_com, sizeof(socket_com));
-								getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
-								bzero (&response, sizeof (response));
-								recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
-								if(strcmp(response, "#") == 0){
-									goto ciclo;
-								}	
+							bzero (&response, sizeof (response));
+							bzero(&socket_com, sizeof(socket_com));
+							getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2,getActualIdGame(username));
+							bzero (&response, sizeof (response));
+							recv(newSocket, response, 1024, 0); //Por ahora para que no se cicle
+							if(strcmp(response, "#") == 0){
+								goto ciclo;
+							}
+							else{
+								printf("Error %s",response);
 							}
 						}
 							if(strcmp(response, "2") == 0){
 								bzero(&socket_com, sizeof(socket_com));
 								printf("El usuario eligio 2\n");
 								char* players = getGamesInProcess(username);
+								printf("%s", players);
 								sprintf(socket_com, "%s", players);
 								send(newSocket, socket_com, strlen(socket_com), 0); //Envia jugadores disponibles
 								bzero (&response, sizeof (response));
@@ -173,10 +175,12 @@ int main(){
 									send(newSocket, socket_com, strlen(socket_com), 0);//Envia los usuarios y sus puntos
 									bzero(&response, sizeof (response));
 									recv(newSocket, response, 1024, 0); 
-									if (getIteration(id_game) > 2){
+									if (getIteration(id_game) >= 2){
 										//FALTA ENVIAR PREGUNTA y respuestas socket
 										bzero(&socket_com, sizeof(socket_com));
-										char* answ_p2 = getGoodAndSelectedOption(id_game);
+										char* answ_p2 = getGoodAndSelectedOption(id_game,getActualIdGame(username));
+										printf("Respuestas a partir de la 3 iteracion");
+										printf("%s",answ_p2);
 										sprintf(socket_com, "%s", answ_p2);
 										send(newSocket, socket_com, strlen(socket_com), 0); //Preguntas resueltas por el jugador oponente
 										//bzero (&socket_com, sizeof (socket_com));
@@ -220,7 +224,7 @@ int main(){
 									bzero(&socket_com, strlen(socket_com));
 									recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
 									int id_player2 = getRival(id_game, getActualIdGame(username));
-									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2,getActualIdGame(username));
 									changeTurnGame(id_game, id_player2);
 									addIterationGame(id_game);
 								}else{
@@ -292,15 +296,16 @@ int main(){
 									int id_game = makeGame(response, username);
 									createStatistics(getActualIdGame(username),id_game);
 									createStatistics(id_player2,id_game);
-									while(1){
-										bzero(&response, sizeof (response));
-										bzero(&socket_com, sizeof(socket_com));
-										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
-										bzero(&response, sizeof (response));
-										recv(newSocket, response, 1024, 0); 
-										if(strcmp(response, "#") == 0){
-											goto ciclo2;
-										}	
+									bzero(&response, sizeof (response));
+									bzero(&socket_com, sizeof(socket_com));
+									getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2,getActualIdGame(username));
+									bzero(&response, sizeof (response));
+									recv(newSocket, response, 1024, 0); 
+									if(strcmp(response, "#") == 0){
+										goto ciclo2;
+									}
+									else{
+										printf("Error %s",response);
 									}
 								}
 								if(strcmp(response, "2") == 0){
@@ -313,10 +318,10 @@ int main(){
 									recv(newSocket, response, 1024, 0); //Recibe numero del juego para continuar la partida
 									int id_game = atoi(response);
 									if (getActualIdGame(username) == getTurnPlayer(id_game)){
-										if (getIteration(id_game) > 2){
+										if (getIteration(id_game) >= 2){
 											//FALTA ENVIAR PREGUNTA y respuestas socket
 											bzero(&socket_com, sizeof(socket_com));
-											char* answ_p2 = getGoodAndSelectedOption(id_game);											
+											char* answ_p2 = getGoodAndSelectedOption(id_game,getActualIdGame(username));											
 											sprintf(socket_com, "%s", answ_p2);
 											send(newSocket, socket_com, strlen(socket_com), 0); //Preguntas resueltas por el jugador oponente
 										}
@@ -363,7 +368,7 @@ int main(){
 										bzero(&socket_com, strlen(socket_com));
 										recv(newSocket, response, 1024, 0); //Recibe acuse de recibido
 										int id_player2 = getRival(id_game, getActualIdGame(username));
-										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2);
+										getNewQuestions(id_game, socket_com, newSocket, response, answers, id_player2,getActualIdGame(username));
 										changeTurnGame(id_game, id_player2);
 										addIterationGame(id_game);
 									}
@@ -427,6 +432,9 @@ int main(){
 			printf("%s\n", questionsData);
 			questionsData = NULL;
 		}
+		printf("Presione cualquier tecla para continuar...");
+		getchar();
+		getchar();
 		goto menuServer;
 	}if(strcmp(buffer_menu, "3") == 0){
 		int id_question;
@@ -465,7 +473,16 @@ int main(){
 		updateValueQuestion(id_question, new_value);
 		goto menuServer;
 	}if(strcmp(buffer_menu, "6") == 0){
-		
+		char* estadisticas = getRankingQuestions();
+		printf("\n* ** *Ranking de preguntas en la base de datos* ** *\n");
+		while((estadisticas = strtok(estadisticas, "$")) != NULL){
+			printf("%s\n", estadisticas);
+			estadisticas = NULL;
+		}
+		printf("Presione cualquier tecla para continuar...");
+		getchar();
+		getchar();
+		goto menuServer;
 	}else{
 		printf("%s\n", buffer_menu);
 	}

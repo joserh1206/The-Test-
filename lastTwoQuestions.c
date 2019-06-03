@@ -54,6 +54,9 @@ char* getTwoPreQuestionsLastPLayer(int game){
 		}
 
   }
+	printf("\n");
+	printf("Las preguntas son: %s",buffer);
+	printf("\n");
 	buffer = out;
 	closeDatabase(db);
 	return buffer;

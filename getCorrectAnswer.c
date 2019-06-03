@@ -44,11 +44,11 @@ char* checkAnswer(int id_game, int response2, int response, char* username){
 	}
 }
 
-void setCorrectAnswer(int optionSelected, int id_game, int id_question){
+void setCorrectAnswer(int optionSelected, int id_game, int id_question, int player){
 	sqlite3 *db = openDatabase();
   char sql[1024];
   int rc;
-  sprintf(sql, "update QuestionsPerGame set good_option = %d where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d", optionSelected, id_game, id_question);
+  sprintf(sql, "update QuestionsPerGame set good_option = %d where QuestionsPerGame.id_game = %d and QuestionsPerGame.id_question = %d and QuestionsPerGame.player = %d", optionSelected, id_game, id_question, player);
 	rc = sqlite3_exec(db, sql, callback, 0, 0);
 
   if (rc != SQLITE_OK)
@@ -82,13 +82,13 @@ void setSelectedAnswer(int optionSelected, int id_game, int id_question){
   closeDatabase(db);
 }
 
-char* getGoodAndSelectedOption(int id_game)
+char* getGoodAndSelectedOption(int id_game, int player2)
 {
   sqlite3 *db = openDatabase();
   char sql[1024], out[2048];
 	char *buffer;
   int rc;
-	sprintf(sql, "select Questions.question, QuestionsPerGame.good_option, QuestionsPerGame.selected_option from QuestionsPerGame inner join Questions on QuestionsPerGame.id_question = Questions.Id_question where QuestionsPerGame.id_question in (select QuestionsPerGame.id_question from QuestionsPerGame where QuestionsPerGame.id_game = %d limit 2 offset (select count(*) from QuestionsPerGame where QuestionsPerGame.id_game = %d)-4) limit 2 offset 1;", id_game,id_game);
+	sprintf(sql, "select Questions.question, QuestionsPerGame.good_option, QuestionsPerGame.selected_option from QuestionsPerGame inner join Questions on QuestionsPerGame.id_question = Questions.Id_question where QuestionsPerGame.player = %d and QuestionsPerGame.id_game =%d and QuestionsPerGame.id_question in (select QuestionsPerGame.id_question from QuestionsPerGame where QuestionsPerGame.id_game = %d limit 2 offset (select count(*) from QuestionsPerGame where QuestionsPerGame.id_game = %d)-4) limit 2;", player2,id_game,id_game,id_game);
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	sqlite3_bind_int(stmt,1,16);
 	if (rc != SQLITE_OK)

@@ -29,6 +29,7 @@ char* getGamesInProcess(char* username){
 		else{
 			buffer = out;
 		}
+		printf("Buffer: %s", buffer);
   }
   closeDatabase(db);
 	return(buffer);
